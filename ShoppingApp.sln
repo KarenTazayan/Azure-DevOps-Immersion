@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{14D8950C-7833-4C96-90E0-7FC66D80900B}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\azuredeploy.bicep = deploy\azuredeploy.bicep
+		deploy\azuredeploy.bicep.azcli = deploy\azuredeploy.bicep.azcli
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8FEF3816-05C8-4E65-A32B-AAD4FDF371EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Abstractions", "src\ShoppingApp.Abstractions\ShoppingApp.Abstractions.csproj", "{FC9112DE-67A3-43F8-9BA4-C8802FB570F7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Grains", "src\ShoppingApp.Grains\ShoppingApp.Grains.csproj", "{3CC05DB6-EDFC-4FEB-A913-E59CC9B14C81}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Silo", "src\ShoppingApp.Silo\ShoppingApp.Silo.csproj", "{BA3A170D-5CAB-4211-8D2F-107E388E8E1F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Tests", "test\ShoppingApp.Tests\ShoppingApp.Tests.csproj", "{B7E0629E-1C20-4A7E-9BD2-498CBE682949}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FC9112DE-67A3-43F8-9BA4-C8802FB570F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC9112DE-67A3-43F8-9BA4-C8802FB570F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC9112DE-67A3-43F8-9BA4-C8802FB570F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC9112DE-67A3-43F8-9BA4-C8802FB570F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CC05DB6-EDFC-4FEB-A913-E59CC9B14C81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CC05DB6-EDFC-4FEB-A913-E59CC9B14C81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CC05DB6-EDFC-4FEB-A913-E59CC9B14C81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CC05DB6-EDFC-4FEB-A913-E59CC9B14C81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA3A170D-5CAB-4211-8D2F-107E388E8E1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA3A170D-5CAB-4211-8D2F-107E388E8E1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA3A170D-5CAB-4211-8D2F-107E388E8E1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA3A170D-5CAB-4211-8D2F-107E388E8E1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7E0629E-1C20-4A7E-9BD2-498CBE682949}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7E0629E-1C20-4A7E-9BD2-498CBE682949}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7E0629E-1C20-4A7E-9BD2-498CBE682949}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7E0629E-1C20-4A7E-9BD2-498CBE682949}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FC9112DE-67A3-43F8-9BA4-C8802FB570F7} = {FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}
+		{3CC05DB6-EDFC-4FEB-A913-E59CC9B14C81} = {FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}
+		{BA3A170D-5CAB-4211-8D2F-107E388E8E1F} = {FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}
+		{B7E0629E-1C20-4A7E-9BD2-498CBE682949} = {8FEF3816-05C8-4E65-A32B-AAD4FDF371EA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D37FECF3-AB0B-4EBD-B448-EB1322C57A2F}
+	EndGlobalSection
+EndGlobal

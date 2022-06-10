@@ -1,0 +1,11 @@
+global using Bogus;
+global using Microsoft.ApplicationInsights.Channel;
+global using Microsoft.ApplicationInsights.Extensibility;
+global using Microsoft.AspNetCore.Components;
+global using MudBlazor;
+global using MudBlazor.Services;
+global using Orleans.Configuration;
+global using Orleans.Hosting;
+global using Orleans.Runtime;
+global using System.Net;
+global using System.Security.Claims;

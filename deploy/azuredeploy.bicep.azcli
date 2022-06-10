@@ -1,0 +1,7 @@
+#az bicep decompile --file azuredeploy.json
+
+az account set --subscription xxx
+az group create --name rg-shopping-app --location "Germany West Central"
+az deployment group create --resource-group rg-shopping-app `
+    --template-file azuredeploy.bicep --parameters nameSuffix='a1'
+
