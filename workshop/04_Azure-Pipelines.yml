@@ -1,0 +1,46 @@
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+stages:
+- stage: Build
+  displayName: Build stage
+  pool:
+    name: Azure Pipelines
+    vmImage: 'windows-latest'
+    demands:
+        - msbuild
+        - visualstudio
+  variables:
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+  jobs:
+  - job: Build_Solution
+    displayName: Whole solution build process
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Use .NET 6.0.200 sdk'
+      inputs:
+        packageType: sdk
+        version: 6.0.200
+
+    - task: NuGetToolInstaller@1
+      displayName: 'Use NuGet 5.x'
+      inputs:
+        versionSpec: 5.x
+
+    - task: NuGetCommand@2
+      displayName: 'Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        feedsToUse: 'config'
+        nugetConfigPath: 'nuget.config'
+        restoreSolution: 'ShoppingApp.sln'
+
+    - task: VSBuild@1
+      displayName: 'Build solution **\*.sln'
+      inputs:
+        solution: '**\*.sln'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'

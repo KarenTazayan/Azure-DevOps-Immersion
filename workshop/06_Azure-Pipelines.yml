@@ -1,12 +1,5 @@
 # https://aka.ms/yaml
 
-name: $(date:yyyyMMdd)$(rev:.r)
-
-variables:
-  nameSuffix: 'a1'
-  appNamePrefix: 'shopping-app'
-  resourceGroupName: 'rg-shopping-app'
-
 trigger:
 - main
 
@@ -105,20 +98,37 @@ stages:
         restoreSolution: 'ShoppingApp.sln'
 
     - task: VSBuild@1
-      displayName: 'Publish ShoppingApp.Silo'
+      displayName: 'Publish ShoppingApp.SiloHost'
       inputs:
-        solution: '$(Build.SourcesDirectory)/src/ShoppingApp.Silo/*.csproj'
-        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.Silo'
+        solution: '$(Build.SourcesDirectory)/src/ShoppingApp.SiloHost/*.csproj'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.SiloHost'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+    
+    - task: VSBuild@1
+      displayName: 'Publish ShoppingApp.ShoppingApp.WebUI'
+      inputs:
+        solution: '$(Build.SourcesDirectory)/src/ShoppingApp.ShoppingApp.WebUI/*.csproj'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.ShoppingApp.WebUI'
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
       
     - task: ArchiveFiles@2
-      displayName: 'Pack ShoppingApp.Silo'
+      displayName: 'Pack ShoppingApp.SiloHost'
       inputs:
-        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.Silo'
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.SiloHost'
         includeRootFolder: false
         archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.Silo.zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.SiloHost.zip'
+        replaceExistingArchive: true
+
+    - task: ArchiveFiles@2
+      displayName: 'Pack ShoppingApp.SiloHost'
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.WebUI'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.WebUI.zip'
         replaceExistingArchive: true
 
     - task: CopyFiles@2
@@ -149,76 +159,3 @@ stages:
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)/services/deploy'
         artifactName: 'services'
-
-##################### Provision Infrastructure Stage #####################
-
-- stage: Provision_Infrastructure
-  displayName: Provision infrastructure stage
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  pool:
-    vmImage: 'ubuntu-latest'
-  variables:
-    azureServiceConnection: 'DefaultAzureServiceConnection'
-    resourceGroupName: 'rg-shopping-app'
-    location: 'germanywestcentral'
-    templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
-  jobs:
-  - job: Deploy_Infrastructure
-    displayName: Deploy infrastructure in Azure
-    steps:
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download whole infrastructure deployment file'
-      inputs:
-        artifact: 'infrastructure'
-        path: $(Pipeline.Workspace)/infrastructure
-
-    - task: AzureCLI@2
-      displayName: 'Deploy the whole infrastructure to Azure'
-      inputs:
-        azureSubscription: 'DefaultAzureServiceConnection'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az --version
-          az group create --name $(resourceGroupName) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName) \
-             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' \
-
-##################### Deploy Solution Stage #####################
-
-- stage: Deploy_Solution
-  displayName: Deploy solution stage
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  pool:
-    name: Azure Pipelines
-    vmImage: 'windows-latest'
-    demands:
-        - msbuild
-        - visualstudio
-  jobs:
-  - job: Deploy_Services
-    displayName: Services deploy process
-    workspace:
-      clean: all
-    steps:
-    - task: DeleteFiles@1
-      displayName: 'Remove services deployment *.zip packages'
-      inputs:
-        contents: '**/*'
-
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download services deployment *.zip packages'
-      inputs:
-        artifact: 'services'
-        path: $(Pipeline.Workspace)/services
-
-    - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploy ShoppingApp.Silo'
-      inputs:
-        appType: webAppLinux
-        ConnectionType: AzureRM            
-        ConnectedServiceName: 'DefaultAzureServiceConnection'
-        ResourceGroupName: '$(resourceGroupName)'
-        WebAppName: '$(appNamePrefix)-$(nameSuffix)'
-        Package: '$(Pipeline.Workspace)/services/ShoppingApp.Silo.zip' 
