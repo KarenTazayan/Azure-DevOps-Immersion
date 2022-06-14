@@ -1,5 +1,4 @@
 # https://aka.ms/yaml
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables
 
 name: $(date:yyyyMMdd)$(rev:.r)
 

@@ -1,0 +1,14 @@
+# Open Azure DevOps Portal : 
+# https://dev.azure.com/
+
+# Create new organization/use an existing organization
+# Sample Name: azure-pipelines-immersion
+
+# Create a new public project
+# Sample Name: ShoppingApp
+
+# Import existing repository
+# https://github.com/KarenTazayan/Azure-Pipelines-Immersion.git
+
+# Create YAML pipeline
+# Sample Name: Default CI and CD pipeline
