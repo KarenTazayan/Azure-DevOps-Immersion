@@ -1,0 +1,3 @@
+# New Azure service connection
+# Name: DefaultAzureServiceConnection
+az ad app create --display-name Azure-Pipelines-Immersion

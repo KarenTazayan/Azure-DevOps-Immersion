@@ -169,35 +169,39 @@ stages:
 - stage: Provision_Infrastructure
   displayName: Provision infrastructure stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  pool:
-    vmImage: 'ubuntu-latest'
-  variables:
-    azureServiceConnection: 'DefaultAzureServiceConnection'
-    resourceGroupName: 'rg-shopping-app'
-    location: 'germanywestcentral'
-    templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
   jobs:
-  - job: Deploy_Infrastructure
+  - deployment: Deploy_Infrastructure
     displayName: Deploy infrastructure in Azure
-    steps:
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download whole infrastructure deployment file'
-      inputs:
-        artifact: 'infrastructure'
-        path: $(Pipeline.Workspace)/infrastructure
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'germanywestcentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
+    environment: 'Staging'
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download whole infrastructure deployment file'
+            inputs:
+              artifact: 'infrastructure'
+              path: $(Pipeline.Workspace)/infrastructure
 
-    - task: AzureCLI@2
-      displayName: 'Deploy the whole infrastructure to Azure'
-      inputs:
-        azureSubscription: 'DefaultAzureServiceConnection'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az --version
-          az group create --name $(resourceGroupName) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName) \
-             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' \
+          - task: AzureCLI@2
+            displayName: 'Deploy the whole infrastructure to Azure'
+            inputs:
+              azureSubscription: 'DefaultAzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az --version
+                az group create --name $(resourceGroupName) --location $(location)
+                az deployment group create --resource-group $(resourceGroupName) \
+                  --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
+                  appNamePrefix='$(appNamePrefix)' \
 
 ##################### Deploy Solution Stage #####################
 

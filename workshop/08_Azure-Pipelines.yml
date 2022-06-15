@@ -110,7 +110,7 @@ stages:
         configuration: '$(buildConfiguration)'
     
     - task: VSBuild@1
-      displayName: 'Publish ShoppingApp.WebUI'
+      displayName: 'Publish ShoppingApp.ShoppingApp.WebUI'
       inputs:
         solution: '$(Build.SourcesDirectory)/src/ShoppingApp.WebUI/*.csproj'
         msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.WebUI'
@@ -198,51 +198,3 @@ stages:
           az deployment group create --resource-group $(resourceGroupName) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
              appNamePrefix='$(appNamePrefix)' \
-
-##################### Deploy Solution Stage #####################
-
-- stage: Deploy_Solution
-  displayName: Deploy solution stage
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  pool:
-    name: Azure Pipelines
-    vmImage: 'windows-latest'
-    demands:
-        - msbuild
-        - visualstudio
-  jobs:
-  - job: Deploy_Services
-    displayName: Services deploy process
-    workspace:
-      clean: all
-    steps:
-    - task: DeleteFiles@1
-      displayName: 'Remove services deployment *.zip packages'
-      inputs:
-        contents: '**/*'
-
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download services deployment *.zip packages'
-      inputs:
-        artifact: 'services'
-        path: $(Pipeline.Workspace)/services
-
-    - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploy ShoppingApp.SiloHost'
-      inputs:
-        appType: webApp
-        ConnectionType: AzureRM            
-        ConnectedServiceName: 'DefaultAzureServiceConnection'
-        ResourceGroupName: '$(resourceGroupName)'
-        WebAppName: '$(appNamePrefix)-silohost-$(nameSuffix)'
-        Package: '$(Pipeline.Workspace)/services/ShoppingApp.SiloHost.zip'
-
-    - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploy ShoppingApp.WebUI'
-      inputs:
-        appType: webApp
-        ConnectionType: AzureRM            
-        ConnectedServiceName: 'DefaultAzureServiceConnection'
-        ResourceGroupName: '$(resourceGroupName)'
-        WebAppName: '$(appNamePrefix)-webui-$(nameSuffix)'
-        Package: '$(Pipeline.Workspace)/services/ShoppingApp.WebUI.zip'
