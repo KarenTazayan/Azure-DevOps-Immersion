@@ -11,7 +11,7 @@ stages:
   displayName: Build stage
   pool:
     name: Azure Pipelines
-    vmImage: 'windows-latest'
+    vmImage: 'windows-2022'
     demands:
         - msbuild
         - visualstudio
@@ -70,7 +70,7 @@ stages:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   pool:
     name: Azure Pipelines
-    vmImage: 'windows-latest'
+    vmImage: 'windows-2022'
     demands:
     - msbuild
     - visualstudio
