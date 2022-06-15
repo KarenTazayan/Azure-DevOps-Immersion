@@ -11,7 +11,7 @@ stages:
   displayName: Build stage
   pool:
     name: Azure Pipelines
-    vmImage: 'windows-latest'
+    vmImage: 'windows-2022'
     demands:
         - msbuild
         - visualstudio
