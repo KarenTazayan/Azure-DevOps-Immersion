@@ -1,5 +1,5 @@
 @description('A unique suffix for names')
-param nameSuffix string = 'a1'
+param nameSuffix string = 'd1'
 param appNamePrefix string ='shopping-app'
 param location string = resourceGroup().location
 param sqlAdministratorLogin string = 'sq'

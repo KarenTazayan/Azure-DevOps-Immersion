@@ -1,7 +1,6 @@
 # https://aka.ms/yaml
 
 variables:
-  nameSuffix: 'a1'
   appNamePrefix: 'shopping-app'
 
 trigger:
@@ -164,21 +163,25 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)/services/deploy'
         artifactName: 'services'
 
-##################### Provision Infrastructure Stage #####################
+##################### Provision Infrastructure Stages #####################
 
-- stage: Provision_Infrastructure
-  displayName: Provision infrastructure stage
+- stage: Provision_Testing_Infrastructure
+  displayName: Provision testing infrastructure stage
+  dependsOn: Packing_Artifacts
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  pool:
-    vmImage: 'ubuntu-latest'
   variables:
-    azureServiceConnection: 'DefaultAzureServiceConnection'
-    resourceGroupName: 'rg-shopping-app'
-    location: 'germanywestcentral'
-    templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'germanywestcentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
   jobs:
-  - job: Deploy_Infrastructure
-    displayName: Deploy infrastructure in Azure
+  - job: Deploy_Infrastructure_Testing
+    displayName: Deploy testing infrastructure in Azure
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      # Testing 't1, t2 t3, ...'
+      nameSuffix: 't1'
     steps:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download whole infrastructure deployment file'
@@ -194,27 +197,70 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
-          az group create --name $(resourceGroupName) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName) \
+          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
              appNamePrefix='$(appNamePrefix)' \
 
+- stage: Provision_Staging_Infrastructure
+  displayName: Provision staging infrastructure stage
+  dependsOn: Packing_Artifacts
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'germanywestcentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
+  jobs:
+  - deployment: Deploy_Infrastructure_Staging
+    displayName: Deploy staging infrastructure in Azure
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      # Staging 's1, s2 s3, ...'
+      nameSuffix: 's1'
+    environment: 'Staging'
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download whole infrastructure deployment file'
+            inputs:
+              artifact: 'infrastructure'
+              path: $(Pipeline.Workspace)/infrastructure
+
+          - task: AzureCLI@2
+            displayName: 'Deploy the whole infrastructure to Azure'
+            inputs:
+              azureSubscription: 'DefaultAzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az --version
+                az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+                az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+                  --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
+                  appNamePrefix='$(appNamePrefix)' \
+
 ##################### Deploy Solution Stage #####################
 
-- stage: Deploy_Solution
-  displayName: Deploy solution stage
+- stage: Deploy_Testing_Solution
+  displayName: Deploy solution in testing envieronment
+  dependsOn: Provision_Testing_Infrastructure
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  pool:
-    name: Azure Pipelines
-    vmImage: 'windows-latest'
-    demands:
-        - msbuild
-        - visualstudio
+  variables:
+      resourceGroupName: 'rg-shopping-app'
   jobs:
-  - job: Deploy_Services
-    displayName: Services deploy process
+  - job: Deploy_Services_Testing
+    displayName: Deploy services to testing environment
+    pool:
+      vmImage: 'ubuntu-latest'
     workspace:
       clean: all
+    variables:
+      # Testing 't1, t2 t3, ...'
+      nameSuffix: 't1'
     steps:
     - task: DeleteFiles@1
       displayName: 'Remove services deployment *.zip packages'
@@ -233,7 +279,7 @@ stages:
         appType: webApp
         ConnectionType: AzureRM            
         ConnectedServiceName: 'DefaultAzureServiceConnection'
-        ResourceGroupName: '$(resourceGroupName)'
+        ResourceGroupName: '$(resourceGroupName)-$(nameSuffix)'
         WebAppName: '$(appNamePrefix)-silohost-$(nameSuffix)'
         Package: '$(Pipeline.Workspace)/services/ShoppingApp.SiloHost.zip'
 
@@ -243,6 +289,56 @@ stages:
         appType: webApp
         ConnectionType: AzureRM            
         ConnectedServiceName: 'DefaultAzureServiceConnection'
-        ResourceGroupName: '$(resourceGroupName)'
+        ResourceGroupName: '$(resourceGroupName)-$(nameSuffix)'
         WebAppName: '$(appNamePrefix)-webui-$(nameSuffix)'
         Package: '$(Pipeline.Workspace)/services/ShoppingApp.WebUI.zip'
+
+- stage: Deploy_Staging_Solution
+  displayName: Deploy solution in staging envieronment
+  dependsOn: Provision_Staging_Infrastructure
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+      resourceGroupName: 'rg-shopping-app'
+  jobs:
+  - deployment: Deploy_Services_Staging
+    displayName: Deploy services to staging environment
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      # Staging 's1, s2 s3, ...'
+      nameSuffix: 's1'
+    environment: 'Staging'
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - task: DeleteFiles@1
+            displayName: 'Remove services deployment *.zip packages'
+            inputs:
+              contents: '**/*'
+
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download services deployment *.zip packages'
+            inputs:
+              artifact: 'services'
+              path: $(Pipeline.Workspace)/services
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy ShoppingApp.SiloHost'
+            inputs:
+              appType: webApp
+              ConnectionType: AzureRM            
+              ConnectedServiceName: 'DefaultAzureServiceConnection'
+              ResourceGroupName: '$(resourceGroupName)-$(nameSuffix)'
+              WebAppName: '$(appNamePrefix)-silohost-$(nameSuffix)'
+              Package: '$(Pipeline.Workspace)/services/ShoppingApp.SiloHost.zip'
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy ShoppingApp.WebUI'
+            inputs:
+              appType: webApp
+              ConnectionType: AzureRM            
+              ConnectedServiceName: 'DefaultAzureServiceConnection'
+              ResourceGroupName: '$(resourceGroupName)-$(nameSuffix)'
+              WebAppName: '$(appNamePrefix)-webui-$(nameSuffix)'
+              Package: '$(Pipeline.Workspace)/services/ShoppingApp.WebUI.zip'
