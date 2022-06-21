@@ -9,9 +9,7 @@ public sealed class ShoppingCartGrain : Grain, IShoppingCartGrain
     private readonly IPersistentState<Dictionary<string, CartItem>> _cart;
 
     public ShoppingCartGrain(
-        [PersistentState(
-            stateName: "ShoppingCart",
-            storageName: "ShoppingApp")]
+        [PersistentState(stateName: "ShoppingCart", storageName: PersistentStorageConfig.AzureStorageName)]
         IPersistentState<Dictionary<string, CartItem>> cart) => _cart = cart;
 
     async Task<bool> IShoppingCartGrain.AddOrUpdateItemAsync(int quantity, ProductDetails product)

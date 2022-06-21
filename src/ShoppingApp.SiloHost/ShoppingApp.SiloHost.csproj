@@ -10,8 +10,10 @@
     <PackageReference Include="Bogus" Version="34.0.2" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.20.0" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="3.6.2" />
+    <PackageReference Include="Microsoft.Orleans.Persistence.AdoNet" Version="3.6.2" />
     <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="3.6.2" />
     <PackageReference Include="Microsoft.Orleans.Server" Version="3.6.2" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
   </ItemGroup>
 
   <ItemGroup>

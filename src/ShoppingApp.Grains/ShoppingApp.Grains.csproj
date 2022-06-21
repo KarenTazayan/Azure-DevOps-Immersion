@@ -19,4 +19,8 @@
     <ProjectReference Include="..\ShoppingApp.Abstractions\ShoppingApp.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Orleans_CodeGenInputs Remove="PersistentStorageConfig.cs" />
+  </ItemGroup>
+
 </Project>

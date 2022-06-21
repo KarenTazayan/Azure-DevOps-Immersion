@@ -1,5 +1,6 @@
 using Orleans.Configuration;
 using Orleans.Hosting;
+using ShoppingApp.Grains;
 using ShoppingApp.SiloHost;
 using System.Net;
 
@@ -10,7 +11,8 @@ builder.UseOrleans((context, siloBuilder) =>
     if (context.HostingEnvironment.IsDevelopment())
     {
         siloBuilder.UseLocalhostClustering()
-            .AddMemoryGrainStorage("ShoppingApp")
+            .AddMemoryGrainStorage(PersistentStorageConfig.AzureSqlName)
+            .AddMemoryGrainStorage(PersistentStorageConfig.AzureStorageName)
             .AddStartupTask<SeedProductStoreTask>();
     }
     else
@@ -23,6 +25,8 @@ builder.UseOrleans((context, siloBuilder) =>
             throw new Exception("Insufficient private ports configured.");
         var (siloPort, gatewayPort) =
             (int.Parse(strPorts[0]), int.Parse(strPorts[1]));
+
+        var azureSqlConnectionString = context.Configuration["AZURE_SQL_CONNECTION_STRING"];
         var connectionString = context.Configuration["AZURE_STORAGE_CONNECTION_STRING"];
 
         siloBuilder.Configure<ClusterMembershipOptions>(options =>
@@ -47,8 +51,14 @@ builder.UseOrleans((context, siloBuilder) =>
                 options.ServiceId = "ShoppingAppService";
             })
             .UseAzureStorageClustering(options => options.ConfigureTableServiceClient(connectionString))
-            .AddAzureTableGrainStorage("ShoppingApp",
-                options => options.ConfigureTableServiceClient(connectionString));
+            .AddAzureTableGrainStorage(PersistentStorageConfig.AzureStorageName,
+                options => options.ConfigureTableServiceClient(connectionString))
+            .AddAdoNetGrainStorage(PersistentStorageConfig.AzureSqlName, options =>
+        {
+            options.Invariant = "System.Data.SqlClient";
+            options.ConnectionString = azureSqlConnectionString;
+            options.UseJsonFormat = true;
+        }); ;
     }
 });
 

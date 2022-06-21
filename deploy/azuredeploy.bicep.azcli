@@ -3,7 +3,7 @@
 # az keyvault purge --name kv-shopping-app-a1 --location germanywestcentral --no-wait --subscription xxx
 
 az account set --subscription xxx
-az group create --name rg-shopping-app --location "Germany West Central"
-az deployment group create --resource-group rg-shopping-app `
-    --template-file azuredeploy.bicep --parameters nameSuffix='a1'
+az group create --name rg-shopping-app-t1 --location "Germany West Central"
+az deployment group create --resource-group rg-shopping-app-t1 `
+    --template-file azuredeploy.bicep --parameters nameSuffix='t1'
 

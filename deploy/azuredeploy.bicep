@@ -1,12 +1,13 @@
 @description('A unique suffix for names')
-param nameSuffix string = 'd1'
+param nameSuffix string = 't1'
 param appNamePrefix string ='shopping-app'
 param location string = resourceGroup().location
 param sqlAdministratorLogin string = 'sq'
-param sqlAdministratorLoginPassword string = 'Passw@rd1+'
+param sqlAdministratorPassword string = 'Passw@rd1+'
 
 var appiName = 'appi-shopping-app-${nameSuffix}'
 var planName = 'plan-shopping-app-${nameSuffix}'
+var uiPlanName = 'plan-shopping-app-ui-${nameSuffix}'
 var keyVaultName = 'kv-shopping-app-${nameSuffix}'
 var logName = 'log-shopping-app-${nameSuffix}'
 var storageName = 'stshoppingapp${nameSuffix}'
@@ -107,12 +108,21 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   }
 }
 
-resource planShoppingApp 'Microsoft.Web/serverfarms@2021-03-01' = {
+resource planShoppingAppUi 'Microsoft.Web/serverfarms@2021-03-01' = {
+  name: uiPlanName
+  location: location
+  kind: 'app'
+  sku: {
+    name: 'B1'
+  }
+}
+
+resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: planName
   location: location
   kind: 'app'
   sku: {
-    name: 'S1'
+    name: 'P1v2'
   }
 }
 
@@ -124,7 +134,7 @@ resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    serverFarmId: planShoppingApp.id
+    serverFarmId: planShoppingAppUi.id
     virtualNetworkSubnetId: vnet.properties.subnets[0].id
     siteConfig: {
       alwaysOn: true
@@ -152,13 +162,17 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    serverFarmId: planShoppingApp.id
+    serverFarmId: planShoppingAppSilo.id
     virtualNetworkSubnetId: vnet.properties.subnets[0].id
     siteConfig: {
       alwaysOn: true
       vnetPrivatePortsCount: 2
       webSocketsEnabled: true
       appSettings: [
+        {
+          name: 'AZURE_SQL_CONNECTION_STRING'
+          value: 'Server=tcp:${sqlServer.name}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlShoppingAppMain.name};Persist Security Info=False;User ID=${sqlAdministratorLogin};Password=${sqlAdministratorPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+        }
         {
           name: 'AZURE_STORAGE_CONNECTION_STRING'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${listKeys(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', storageName), '2019-04-01').keys[0].value};EndpointSuffix=core.windows.net'
@@ -173,17 +187,17 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
-resource sql 'Microsoft.Sql/servers@2021-08-01-preview' = {
+resource sqlServer 'Microsoft.Sql/servers@2021-08-01-preview' = {
   name: sqlName
   location: location
   properties: {
     administratorLogin: sqlAdministratorLogin
-    administratorLoginPassword: sqlAdministratorLoginPassword
+    administratorLoginPassword: sqlAdministratorPassword
   }
 }
 
-resource sql_AllowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-08-01-preview' = {
-  parent: sql
+resource sqlServerAllowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-08-01-preview' = {
+  parent: sqlServer
   name: 'AllowAllWindowsAzureIps'
   properties: {
     startIpAddress: '0.0.0.0'
@@ -191,9 +205,9 @@ resource sql_AllowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-0
   }
 }
 
-resource sql_MicrosoftAccounts 'Microsoft.Sql/servers/databases@2021-08-01-preview' = {
-  parent: sql
-  name: 'MicrosoftAccounts'
+resource sqlShoppingAppMain 'Microsoft.Sql/servers/databases@2021-08-01-preview' = {
+  parent: sqlServer
+  name: 'ShoppingAppMain'
   location: location
   sku: {
     name: 'Basic'

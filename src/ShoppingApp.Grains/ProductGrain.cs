@@ -8,9 +8,7 @@ internal class ProductGrain : Grain, IProductGrain
     private readonly IPersistentState<ProductDetails> _product;
 
     public ProductGrain(
-        [PersistentState(
-            stateName: "Product",
-            storageName: "ShoppingApp")]
+        [PersistentState(stateName: "Product", storageName: PersistentStorageConfig.AzureSqlName)]
         IPersistentState<ProductDetails> product) => _product = product;
 
     Task<int> IProductGrain.GetProductAvailabilityAsync() => 

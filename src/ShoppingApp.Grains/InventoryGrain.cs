@@ -10,9 +10,7 @@ public sealed class InventoryGrain : Grain, IInventoryGrain
     private readonly Dictionary<string, ProductDetails> _productCache = new();
 
     public InventoryGrain(
-        [PersistentState(
-            stateName: "Inventory",
-            storageName: "ShoppingApp")]
+        [PersistentState(stateName: "Inventory", storageName: PersistentStorageConfig.AzureStorageName)]
         IPersistentState<HashSet<string>> state) => _productIds = state;
 
     public override Task OnActivateAsync() => PopulateProductCacheAsync();
