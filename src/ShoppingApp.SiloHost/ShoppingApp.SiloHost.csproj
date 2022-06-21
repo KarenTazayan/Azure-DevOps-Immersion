@@ -7,6 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="MicrosoftSqlServer\SQLServer-Main.sql" />
+    <None Remove="MicrosoftSqlServer\SQLServer-Persistence.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="MicrosoftSqlServer\SQLServer-Main.sql" />
+    <EmbeddedResource Include="MicrosoftSqlServer\SQLServer-Persistence.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Bogus" Version="34.0.2" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.20.0" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="3.6.2" />

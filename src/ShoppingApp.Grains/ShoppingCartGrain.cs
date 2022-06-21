@@ -1,4 +1,6 @@
 ﻿using Orleans;
+using Orleans.Concurrency;
+using Orleans.Runtime;
 using ShoppingApp.Abstractions;
 
 namespace ShoppingApp.Grains;

@@ -89,19 +89,35 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         '10.0.0.0/16'
       ]
     }
-    subnets: [
+  }
+}
+
+resource subnetSiloHost 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
+  name: 'SiloHost'
+  parent: vnet
+  properties: {
+    addressPrefix: '10.0.0.0/24'
+    delegations: [ 
       {
-        name: 'default'
+        name: 'delegation'
         properties: {
-          addressPrefix: '10.0.0.0/24'
-          delegations: [ 
-            {
-              name: 'delegation'
-              properties: {
-                serviceName: 'Microsoft.Web/serverFarms'
-              }
-            }
-          ]
+          serviceName: 'Microsoft.Web/serverFarms'
+        }
+      }
+    ]
+  }
+}
+
+resource subnetWebUI 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
+  name: 'WebUI'
+  parent: vnet
+  properties: {
+    addressPrefix: '10.0.1.0/24'
+    delegations: [ 
+      {
+        name: 'delegation'
+        properties: {
+          serviceName: 'Microsoft.Web/serverFarms'
         }
       }
     ]
@@ -135,7 +151,7 @@ resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
   }
   properties: {
     serverFarmId: planShoppingAppUi.id
-    virtualNetworkSubnetId: vnet.properties.subnets[0].id
+    virtualNetworkSubnetId: subnetWebUI.id
     siteConfig: {
       alwaysOn: true
       webSocketsEnabled: true
@@ -163,7 +179,7 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
   }
   properties: {
     serverFarmId: planShoppingAppSilo.id
-    virtualNetworkSubnetId: vnet.properties.subnets[0].id
+    virtualNetworkSubnetId: subnetSiloHost.id
     siteConfig: {
       alwaysOn: true
       vnetPrivatePortsCount: 2

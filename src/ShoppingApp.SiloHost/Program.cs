@@ -2,6 +2,7 @@ using Orleans.Configuration;
 using Orleans.Hosting;
 using ShoppingApp.Grains;
 using ShoppingApp.SiloHost;
+using ShoppingApp.SiloHost.MicrosoftSqlServer;
 using System.Net;
 
 var builder = Host.CreateDefaultBuilder(args);
@@ -12,8 +13,7 @@ builder.UseOrleans((context, siloBuilder) =>
     {
         siloBuilder.UseLocalhostClustering()
             .AddMemoryGrainStorage(PersistentStorageConfig.AzureSqlName)
-            .AddMemoryGrainStorage(PersistentStorageConfig.AzureStorageName)
-            .AddStartupTask<SeedProductStoreTask>();
+            .AddMemoryGrainStorage(PersistentStorageConfig.AzureStorageName);
     }
     else
     {
@@ -28,6 +28,9 @@ builder.UseOrleans((context, siloBuilder) =>
 
         var azureSqlConnectionString = context.Configuration["AZURE_SQL_CONNECTION_STRING"];
         var connectionString = context.Configuration["AZURE_STORAGE_CONNECTION_STRING"];
+
+        var sqlDatabaseInitializer = new SqlDatabaseInitializer(azureSqlConnectionString);
+        sqlDatabaseInitializer.Run();
 
         siloBuilder.Configure<ClusterMembershipOptions>(options =>
         {
@@ -60,6 +63,8 @@ builder.UseOrleans((context, siloBuilder) =>
             options.UseJsonFormat = true;
         }); ;
     }
+
+    siloBuilder.AddStartupTask<SeedProductStoreTask>();
 });
 
 builder.ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
