@@ -6,7 +6,7 @@ namespace ShoppingApp.Tests.Configuration;
 
 public static class TestUsers
 {
-    public static readonly List<TestUser> Users = new List<TestUser>
+    public static readonly List<TestUser> Users = new()
     {
         new TestUser
         {

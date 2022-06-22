@@ -1,5 +1,6 @@
 ﻿using Orleans;
 using Orleans.Configuration;
+// ReSharper disable once RedundantUsingDirective
 using Orleans.Hosting;
 using ShoppingApp.Abstractions;
 

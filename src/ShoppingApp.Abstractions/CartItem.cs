@@ -1,7 +1,7 @@
 ﻿namespace ShoppingApp.Abstractions;
 
 [Serializable, Immutable]
-public sealed record class CartItem(
+public sealed record CartItem(
     string UserId, int Quantity, ProductDetails Product)
 {
     [JsonIgnore]

@@ -32,16 +32,9 @@
             <MudText Typo=Typo.subtitle1><b>@TotalCost</b></MudText>
         </MudStack>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-            Disabled="@(Items?.Count() == 0 ? true : false)" DisableElevation
+            Disabled="@(Items?.Count() == 0)" DisableElevation
             Size=@Size.Large>
             Checkout
         </MudButton>
     </MudStack>
 </MudPaper>
-
-@code {
-    string TotalCost => Items?.Sum(x => x.TotalPrice).ToString("C2") ?? "$0.00";
-
-    [Parameter, EditorRequired]
-    public HashSet<CartItem>? Items { get; set; }
-}

@@ -10,7 +10,7 @@ public static class IdentityServerConfig
     {
         return new List<ApiScope>
         {
-            new ApiScope(name: "Api1",   displayName: "Api1")
+            new(name: "Api1",   displayName: "Api1")
         };
     }
 
@@ -30,7 +30,7 @@ public static class IdentityServerConfig
     {
         return new List<Client>
         {
-            new Client
+            new()
             {
                 ClientId = "WebClient",
                 AccessTokenType = AccessTokenType.Jwt,

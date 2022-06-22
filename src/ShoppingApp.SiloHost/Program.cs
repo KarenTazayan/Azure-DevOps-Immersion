@@ -61,7 +61,7 @@ builder.UseOrleans((context, siloBuilder) =>
             options.Invariant = "System.Data.SqlClient";
             options.ConnectionString = azureSqlConnectionString;
             options.UseJsonFormat = true;
-        }); ;
+        });
     }
 
     siloBuilder.AddStartupTask<SeedProductStoreTask>();

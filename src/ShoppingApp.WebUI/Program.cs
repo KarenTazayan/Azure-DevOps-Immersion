@@ -1,6 +1,5 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using MudBlazor.Services;
-using Orleans;
 using ShoppingApp.WebUI;
 using ShoppingApp.WebUI.Cluster;
 using ShoppingApp.WebUI.Services;
@@ -25,7 +24,7 @@ builder.Services.AddSingleton<ITelemetryInitializer, TelemetryInitializer>();
 builder.Services.AddApplicationInsightsTelemetry(GlobalConfig.InstrumentationKey);
 
 // Configure Microsoft Orleans Client
-builder.Services.AddScoped<IClusterClient>(_ =>
+builder.Services.AddScoped(_ =>
 {
     var client = new Client().Build();
     client.Connect().Wait();
