@@ -14,7 +14,7 @@ var storageName = 'stshoppingapp${nameSuffix}'
 var vnetName = 'vnet-${appNamePrefix}-${nameSuffix}'
 var appWebUIName = '${appNamePrefix}-webui-${nameSuffix}'
 var appSiloHostName = '${appNamePrefix}-silohost-${nameSuffix}'
-var sqlName = 'sql-account-search-${nameSuffix}'
+var sqlName = 'sql-${appNamePrefix}-${nameSuffix}'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   name: keyVaultName
@@ -144,7 +144,7 @@ resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
   location: location
   kind: 'app'
   sku: {
-    name: 'P1v2'
+    name: 'S1'
   }
   dependsOn: [
     subnetSiloHost
