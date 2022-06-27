@@ -123,7 +123,7 @@ stages:
         replaceExistingArchive: true
 
     - task: ArchiveFiles@2
-      displayName: 'Pack ShoppingApp.SiloHost'
+      displayName: 'Pack ShoppingApp.WebUI'
       inputs:
         rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/services/ShoppingApp.WebUI'
         includeRootFolder: false
