@@ -111,6 +111,9 @@ resource subnetSiloHost 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' =
 resource subnetWebUI 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
   name: 'WebUI'
   parent: vnet
+  dependsOn: [
+    subnetSiloHost
+  ]
   properties: {
     addressPrefix: '10.0.1.0/24'
     delegations: [ 
@@ -131,6 +134,9 @@ resource planShoppingAppUi 'Microsoft.Web/serverfarms@2021-03-01' = {
   sku: {
     name: 'B1'
   }
+  dependsOn: [
+    subnetWebUI
+  ]
 }
 
 resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
@@ -140,6 +146,9 @@ resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
   sku: {
     name: 'P1v2'
   }
+  dependsOn: [
+    subnetSiloHost
+  ]
 }
 
 resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
