@@ -89,38 +89,33 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         '10.0.0.0/16'
       ]
     }
-  }
-}
-
-resource subnetSiloHost 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
-  name: 'SiloHost'
-  parent: vnet
-  properties: {
-    addressPrefix: '10.0.0.0/24'
-    delegations: [ 
+    subnets: [
       {
-        name: 'delegation'
+        name: 'SiloHost'
         properties: {
-          serviceName: 'Microsoft.Web/serverFarms'
+          addressPrefix: '10.0.0.0/24'
+          delegations: [ 
+            {
+              name: 'delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
         }
       }
-    ]
-  }
-}
-
-resource subnetWebUI 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
-  name: 'WebUI'
-  parent: vnet
-  dependsOn: [
-    subnetSiloHost
-  ]
-  properties: {
-    addressPrefix: '10.0.1.0/24'
-    delegations: [ 
       {
-        name: 'delegation'
+        name: 'WebUI'
         properties: {
-          serviceName: 'Microsoft.Web/serverFarms'
+          addressPrefix: '10.0.1.0/24'
+          delegations: [ 
+            {
+              name: 'delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
         }
       }
     ]
@@ -134,9 +129,6 @@ resource planShoppingAppUi 'Microsoft.Web/serverfarms@2021-03-01' = {
   sku: {
     name: 'B1'
   }
-  dependsOn: [
-    subnetWebUI
-  ]
 }
 
 resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
@@ -146,9 +138,6 @@ resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
   sku: {
     name: 'S1'
   }
-  dependsOn: [
-    subnetSiloHost
-  ]
 }
 
 resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
@@ -160,7 +149,7 @@ resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
   }
   properties: {
     serverFarmId: planShoppingAppUi.id
-    virtualNetworkSubnetId: subnetWebUI.id
+    virtualNetworkSubnetId: vnet.properties.subnets[1].id
     siteConfig: {
       alwaysOn: true
       webSocketsEnabled: true
@@ -188,7 +177,7 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
   }
   properties: {
     serverFarmId: planShoppingAppSilo.id
-    virtualNetworkSubnetId: subnetSiloHost.id
+    virtualNetworkSubnetId: vnet.properties.subnets[0].id
     siteConfig: {
       alwaysOn: true
       vnetPrivatePortsCount: 2
