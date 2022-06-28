@@ -69,8 +69,8 @@ stages:
     name: Azure Pipelines
     vmImage: 'windows-2022'
     demands:
-    - msbuild
-    - visualstudio
+        - msbuild
+        - visualstudio
   variables:
     buildPlatform: 'Any CPU'
     buildConfiguration: 'Release'
@@ -106,10 +106,10 @@ stages:
         configuration: '$(buildConfiguration)'
     
     - task: VSBuild@1
-      displayName: 'Publish ShoppingApp.ShoppingApp.WebUI'
+      displayName: 'Publish ShoppingApp.WebUI'
       inputs:
-        solution: '$(Build.SourcesDirectory)/src/ShoppingApp.ShoppingApp.WebUI/*.csproj'
-        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.ShoppingApp.WebUI'
+        solution: '$(Build.SourcesDirectory)/src/ShoppingApp.WebUI/*.csproj'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.WebUI'
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
       

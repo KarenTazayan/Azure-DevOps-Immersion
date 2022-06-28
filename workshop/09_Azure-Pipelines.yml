@@ -194,8 +194,8 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
-          az group create --name $(resourceGroupName) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName) \
+          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
              appNamePrefix='$(appNamePrefix)' \
 

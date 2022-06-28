@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
 
 variables:
-  nameSuffix: 'a1'
+  nameSuffix: 't1'
   appNamePrefix: 'shopping-app'
 
 trigger:
@@ -110,7 +110,7 @@ stages:
         configuration: '$(buildConfiguration)'
     
     - task: VSBuild@1
-      displayName: 'Publish ShoppingApp.ShoppingApp.WebUI'
+      displayName: 'Publish ShoppingApp.WebUI'
       inputs:
         solution: '$(Build.SourcesDirectory)/src/ShoppingApp.WebUI/*.csproj'
         msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:publishUrl=$(Build.ArtifactStagingDirectory)/services/ShoppingApp.WebUI'
@@ -194,7 +194,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
-          az group create --name $(resourceGroupName) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName) \
+          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
              appNamePrefix='$(appNamePrefix)' \
