@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
 
 variables:
-  nameSuffix: 'a1'
+  nameSuffix: 't1'
   appNamePrefix: 'shopping-app'
 
 trigger:
