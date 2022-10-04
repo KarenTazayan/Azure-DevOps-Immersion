@@ -3,7 +3,8 @@ param nameSuffix string = 't1'
 param appNamePrefix string ='shopping-app'
 param location string = resourceGroup().location
 param sqlAdministratorLogin string = 'sq'
-param sqlAdministratorPassword string = 'Passw@rd1+'
+@secure()
+param sqlAdministratorPassword string
 
 var appiName = 'appi-shopping-app-${nameSuffix}'
 var planName = 'plan-shopping-app-${nameSuffix}'
@@ -15,10 +16,14 @@ var vnetName = 'vnet-${appNamePrefix}-${nameSuffix}'
 var appWebUIName = '${appNamePrefix}-webui-${nameSuffix}'
 var appSiloHostName = '${appNamePrefix}-silohost-${nameSuffix}'
 var sqlName = 'sql-${appNamePrefix}-${nameSuffix}'
+var tags = {
+  Purpose: 'Azure Workshop'
+}
 
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   name: keyVaultName
   location: location
+  tags: tags
   properties: {
     accessPolicies: [
       {
@@ -49,16 +54,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
 
 resource storage 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   name: storageName
+  location: location
+  tags: tags
   sku: {
     name: 'Standard_LRS'
   }
   kind: 'StorageV2'
-  location: location
 }
 
 resource log 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
   name: logName
   location: location
+  tags: tags
   properties: {
     sku: {
       name: 'PerGB2018'
@@ -70,6 +77,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
 resource appi 'Microsoft.Insights/components@2020-02-02' = {
   name: appiName
   location: location
+  tags: tags
   kind: 'web'
   properties: {
     Application_Type: 'web'
@@ -83,6 +91,7 @@ resource appi 'Microsoft.Insights/components@2020-02-02' = {
 resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   name: vnetName
   location: location
+  tags: tags
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -125,6 +134,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
 resource planShoppingAppUi 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: uiPlanName
   location: location
+  tags: tags
   kind: 'app'
   sku: {
     name: 'B1'
@@ -134,6 +144,7 @@ resource planShoppingAppUi 'Microsoft.Web/serverfarms@2021-03-01' = {
 resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: planName
   location: location
+  tags: tags
   kind: 'app'
   sku: {
     name: 'S1'
@@ -143,6 +154,7 @@ resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
 resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
   name: appWebUIName
   location: location
+  tags: tags
   kind: 'app'
   identity: {
     type: 'SystemAssigned'
@@ -171,6 +183,7 @@ resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
 resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
   name: appSiloHostName
   location: location
+  tags: tags
   kind: 'app'
   identity: {
     type: 'SystemAssigned'
@@ -201,16 +214,17 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
-resource sqlServer 'Microsoft.Sql/servers@2021-08-01-preview' = {
+resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
   name: sqlName
   location: location
+  tags: tags
   properties: {
     administratorLogin: sqlAdministratorLogin
     administratorLoginPassword: sqlAdministratorPassword
   }
 }
 
-resource sqlServerAllowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-08-01-preview' = {
+resource sqlServerAllowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-11-01' = {
   parent: sqlServer
   name: 'AllowAllWindowsAzureIps'
   properties: {
@@ -219,10 +233,11 @@ resource sqlServerAllowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2
   }
 }
 
-resource sqlShoppingAppMain 'Microsoft.Sql/servers/databases@2021-08-01-preview' = {
+resource sqlShoppingAppMain 'Microsoft.Sql/servers/databases@2021-11-01' = {
   parent: sqlServer
   name: 'ShoppingAppMain'
   location: location
+  tags: tags
   sku: {
     name: 'Basic'
     tier: 'Basic'
