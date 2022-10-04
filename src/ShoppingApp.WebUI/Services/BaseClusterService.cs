@@ -5,8 +5,8 @@ namespace ShoppingApp.WebUI.Services;
 
 public class BaseClusterService
 {
-    private readonly IHttpContextAccessor _httpContextAccessor = null!;
-    protected readonly IClusterClient Client = null!;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    protected readonly IClusterClient Client;
 
     public BaseClusterService(
         IHttpContextAccessor httpContextAccessor, IClusterClient client) =>

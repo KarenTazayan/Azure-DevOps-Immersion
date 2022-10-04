@@ -4,7 +4,7 @@ namespace ShoppingApp.WebUI.Extensions;
 
 internal static class HttpContextAccessorExtensions
 {
-    internal static string? TryGetUserId(
+    internal static string TryGetUserId(
         this IHttpContextAccessor? httpContextAccessor) =>
         httpContextAccessor
             ?.HttpContext

@@ -1,4 +1,5 @@
-﻿using Orleans;
+﻿using JetBrains.Annotations;
+using Orleans;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 using ShoppingApp.Abstractions;
@@ -6,6 +7,7 @@ using ShoppingApp.Abstractions;
 namespace ShoppingApp.Grains;
 
 [Reentrant]
+[UsedImplicitly]
 public sealed class ShoppingCartGrain : Grain, IShoppingCartGrain
 {
     private readonly IPersistentState<Dictionary<string, CartItem>> _cart;

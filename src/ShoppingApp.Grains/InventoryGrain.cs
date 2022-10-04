@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Orleans;
 using Orleans.Concurrency;
 using Orleans.Runtime;
@@ -6,6 +7,7 @@ using ShoppingApp.Abstractions;
 namespace ShoppingApp.Grains;
 
 [Reentrant]
+[UsedImplicitly]
 public sealed class InventoryGrain : Grain, IInventoryGrain
 {
     private readonly IPersistentState<HashSet<string>> _productIds;
