@@ -8,7 +8,10 @@ public class Startup
     {
         // Application Insights.
         services.AddSingleton<ITelemetryInitializer, TelemetryInitializer>();
-        services.AddApplicationInsightsTelemetry(GlobalConfig.InstrumentationKey);
+        services.AddApplicationInsightsTelemetry(options =>
+        {
+            options.ConnectionString = GlobalConfig.AppInsightsConnectionString;
+        });
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

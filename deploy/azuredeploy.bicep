@@ -67,7 +67,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
   }
 }
 
-resource appi 'microsoft.insights/components@2020-02-02-preview' = {
+resource appi 'Microsoft.Insights/components@2020-02-02' = {
   name: appiName
   location: location
   kind: 'web'
@@ -159,8 +159,8 @@ resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${listKeys(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', storageName), '2019-04-01').keys[0].value};EndpointSuffix=core.windows.net'
         }
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: reference('microsoft.insights/components/${appiName}', '2020-02-02-preview').InstrumentationKey
+          name: 'APPINSIGHTS_CONNECTION_STRING'
+          value: reference(appi.id, '2020-02-02').ConnectionString
         }
       ]
       netFrameworkVersion: 'v6.0'
@@ -192,8 +192,8 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${listKeys(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', storageName), '2019-04-01').keys[0].value};EndpointSuffix=core.windows.net'
         }
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: reference('microsoft.insights/components/${appiName}', '2020-02-02-preview').InstrumentationKey
+          name: 'APPINSIGHTS_CONNECTION_STRING'
+          value: reference(appi.id, '2020-02-02').ConnectionString
         }
       ]
       netFrameworkVersion: 'v6.0'

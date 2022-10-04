@@ -2,7 +2,7 @@ namespace ShoppingApp.SiloHost;
 
 public static class GlobalConfig
 {
-    public static string InstrumentationKey => Resolver.InstrKey;
+    public static string AppInsightsConnectionString => Resolver.InstrKey;
 
     private static class Resolver
     {

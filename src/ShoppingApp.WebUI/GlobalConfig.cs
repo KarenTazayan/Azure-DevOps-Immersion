@@ -4,7 +4,7 @@ public static class GlobalConfig
 {
     public static string AzureStorageConnection => Resolver.AzureStorageConnectionString;
 
-    public static string InstrumentationKey => Resolver.InstrKey;
+    public static string AppInsightsConnectionString => Resolver.InstrKey;
 
     private static class Resolver
     {

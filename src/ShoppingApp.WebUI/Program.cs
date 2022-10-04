@@ -21,7 +21,10 @@ builder.Services.AddLocalStorageServices();
 
 // Application Insights.
 builder.Services.AddSingleton<ITelemetryInitializer, TelemetryInitializer>();
-builder.Services.AddApplicationInsightsTelemetry(GlobalConfig.InstrumentationKey);
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    options.ConnectionString = GlobalConfig.AppInsightsConnectionString;
+});
 
 // Configure Microsoft Orleans Client
 builder.Services.AddScoped(_ =>

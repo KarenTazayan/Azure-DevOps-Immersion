@@ -6,5 +6,5 @@ internal static class EnvironmentVariables
         "AZURE_STORAGE_CONNECTION_STRING";
 
     public static string InstrumentationKey =>
-        "APPINSIGHTS_INSTRUMENTATIONKEY";
+        "APPINSIGHTS_CONNECTION_STRING";
 }
