@@ -34,10 +34,10 @@ builder.UseOrleans((context, siloBuilder) =>
 
         siloBuilder.Configure<ClusterMembershipOptions>(options =>
         {
-            //options.NumVotesForDeathDeclaration = 1;
-            //options.TableRefreshTimeout = TimeSpan.FromSeconds(5);
-            //options.DeathVoteExpirationTimeout = TimeSpan.FromSeconds(5);
-            //options.IAmAliveTablePublishTimeout = TimeSpan.FromSeconds(3);
+            options.NumVotesForDeathDeclaration = 1;
+            options.TableRefreshTimeout = TimeSpan.FromSeconds(2);
+            options.DeathVoteExpirationTimeout = TimeSpan.FromSeconds(2);
+            options.IAmAliveTablePublishTimeout = TimeSpan.FromSeconds(2);
         })
             .Configure<SiloOptions>(options => options.SiloName = endpointAddress.ToString())
             .Configure<EndpointOptions>(options =>

@@ -7,8 +7,7 @@ stages:
 - stage: Build
   displayName: Build stage
   pool:
-    name: Azure Pipelines
-    vmImage: 'windows-2022'
+    name: Default
     demands:
         - msbuild
         - visualstudio
@@ -66,8 +65,7 @@ stages:
   displayName: Packing artifacts stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   pool:
-    name: Azure Pipelines
-    vmImage: 'windows-2022'
+    name: Default
     demands:
         - msbuild
         - visualstudio

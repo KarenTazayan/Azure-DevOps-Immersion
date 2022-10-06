@@ -10,8 +10,7 @@ stages:
 - stage: Build
   displayName: Build stage
   pool:
-    name: Azure Pipelines
-    vmImage: 'windows-2022'
+    name: Default
     demands:
         - msbuild
         - visualstudio
@@ -69,11 +68,10 @@ stages:
   displayName: Packing artifacts stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   pool:
-    name: Azure Pipelines
-    vmImage: 'windows-2022'
+    name: Default
     demands:
-    - msbuild
-    - visualstudio
+        - msbuild
+        - visualstudio
   variables:
     buildPlatform: 'Any CPU'
     buildConfiguration: 'Release'
@@ -172,16 +170,16 @@ stages:
   variables:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
-      location: 'germanywestcentral'
+      location: 'francecentral'
       templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
   jobs:
   - job: Deploy_Infrastructure_Testing
     displayName: Deploy testing infrastructure in Azure
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     variables:
       # Testing 't1, t2 t3, ...'
-      nameSuffix: 't1'
+      nameSuffix: 'd1'
     steps:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download whole infrastructure deployment file'
@@ -193,14 +191,14 @@ stages:
       displayName: 'Deploy the whole infrastructure to Azure'
       inputs:
         azureSubscription: 'DefaultAzureServiceConnection'
-        scriptType: 'bash'
+        scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
-             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' \
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) `
+             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' `
+             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'
 
 - stage: Provision_Staging_Infrastructure
   displayName: Provision staging infrastructure stage
@@ -209,13 +207,13 @@ stages:
   variables:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
-      location: 'germanywestcentral'
+      location: 'francecentral'
       templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
   jobs:
   - deployment: Deploy_Infrastructure_Staging
     displayName: Deploy staging infrastructure in Azure
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     variables:
       # Staging 's1, s2 s3, ...'
       nameSuffix: 's1'
@@ -234,14 +232,14 @@ stages:
             displayName: 'Deploy the whole infrastructure to Azure'
             inputs:
               azureSubscription: 'DefaultAzureServiceConnection'
-              scriptType: 'bash'
+              scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az --version
                 az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
-                az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
-                  --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-                  appNamePrefix='$(appNamePrefix)' \
+                az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) `
+                  --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' `
+                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'
 
 ##################### Deploy Solution Stage #####################
 
@@ -255,12 +253,12 @@ stages:
   - job: Deploy_Services_Testing
     displayName: Deploy services to testing environment
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     workspace:
       clean: all
     variables:
       # Testing 't1, t2 t3, ...'
-      nameSuffix: 't1'
+      nameSuffix: 'd1'
     steps:
     - task: DeleteFiles@1
       displayName: 'Remove services deployment *.zip packages'
@@ -303,7 +301,7 @@ stages:
   - deployment: Deploy_Services_Staging
     displayName: Deploy services to staging environment
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     variables:
       # Staging 's1, s2 s3, ...'
       nameSuffix: 's1'

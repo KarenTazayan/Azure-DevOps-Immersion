@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
 
 variables:
-  nameSuffix: 't1'
+  nameSuffix: 'd1'
   appNamePrefix: 'shopping-app'
 
 trigger:
@@ -11,8 +11,7 @@ stages:
 - stage: Build
   displayName: Build stage
   pool:
-    name: Azure Pipelines
-    vmImage: 'windows-2022'
+    name: Default
     demands:
         - msbuild
         - visualstudio
@@ -70,11 +69,10 @@ stages:
   displayName: Packing artifacts stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   pool:
-    name: Azure Pipelines
-    vmImage: 'windows-2022'
+    name: Default
     demands:
-    - msbuild
-    - visualstudio
+        - msbuild
+        - visualstudio
   variables:
     buildPlatform: 'Any CPU'
     buildConfiguration: 'Release'
@@ -170,11 +168,11 @@ stages:
   displayName: Provision infrastructure stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   pool:
-    vmImage: 'ubuntu-latest'
+    name: Default
   variables:
     azureServiceConnection: 'DefaultAzureServiceConnection'
     resourceGroupName: 'rg-shopping-app'
-    location: 'germanywestcentral'
+    location: 'francecentral'
     templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
   jobs:
   - job: Deploy_Infrastructure
@@ -190,11 +188,11 @@ stages:
       displayName: 'Deploy the whole infrastructure to Azure'
       inputs:
         azureSubscription: 'DefaultAzureServiceConnection'
-        scriptType: 'bash'
+        scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
-             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' \
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) `
+             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' `
+             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'
