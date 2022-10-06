@@ -181,6 +181,13 @@ resource appShoppingAppWebUI 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
+resource appShoppingAppWebUIConfig 'Microsoft.Web/sites/config@2021-03-01' = {
+  name: '${appShoppingAppWebUI.name}/metadata'
+  properties: {
+    CURRENT_STACK: 'dotnet'
+  }
+}
+
 resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
   name: appSiloHostName
   location: location
@@ -212,6 +219,13 @@ resource appShoppingAppSiloHost 'Microsoft.Web/sites@2021-03-01' = {
       ]
       netFrameworkVersion: 'v6.0'
     }
+  }
+}
+
+resource appShoppingAppSiloHostConfig 'Microsoft.Web/sites/config@2021-03-01' = {
+  name: '${appShoppingAppSiloHost.name}/metadata'
+  properties: {
+    CURRENT_STACK: 'dotnet'
   }
 }
 
