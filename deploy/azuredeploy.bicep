@@ -148,7 +148,7 @@ resource planShoppingAppSilo 'Microsoft.Web/serverfarms@2021-03-01' = {
   kind: 'app'
   sku: {
     name: 'S1'
-    capacity: 2
+    capacity: 1
   }
 }
 
