@@ -22,12 +22,12 @@
   <ItemGroup>
     <PackageReference Include="Bogus" Version="34.0.2" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
-    <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="3.6.2" />
-    <PackageReference Include="Microsoft.Orleans.Persistence.AdoNet" Version="3.6.2" />
-    <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="3.6.2" />
-    <PackageReference Include="Microsoft.Orleans.Server" Version="3.6.2" />
+    <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="3.6.5" />
+    <PackageReference Include="Microsoft.Orleans.Persistence.AdoNet" Version="3.6.5" />
+    <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="3.6.5" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="3.6.5" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" />
   </ItemGroup>
 
   <ItemGroup>
