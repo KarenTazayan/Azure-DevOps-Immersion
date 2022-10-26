@@ -4,6 +4,7 @@ using ShoppingApp.Grains;
 using ShoppingApp.SiloHost;
 using ShoppingApp.SiloHost.MicrosoftSqlServer;
 using System.Net;
+using System.Net.Sockets;
 
 var builder = Host.CreateDefaultBuilder(args);
 
@@ -17,14 +18,27 @@ builder.UseOrleans((context, siloBuilder) =>
     }
     else
     {
-        var endpointAddress =
-            IPAddress.Parse(context.Configuration["WEBSITE_PRIVATE_IP"]);
-        var strPorts =
-            context.Configuration["WEBSITE_PRIVATE_PORTS"].Split(',');
-        if (strPorts.Length < 2)
-            throw new Exception("Insufficient private ports configured.");
-        var (siloPort, gatewayPort) =
-            (int.Parse(strPorts[0]), int.Parse(strPorts[1]));
+        var siloPort = 11111;
+        var gatewayPort = 30000;
+        var hostName = Dns.GetHostName();
+        var ipEntry = Dns.GetHostEntry(hostName);
+        var endpointAddress = 
+            ipEntry.AddressList.First(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+        
+        // Azure App Service hosting option.
+        if (!string.IsNullOrWhiteSpace(context.Configuration["WEBSITE_PRIVATE_IP"])
+            && !string.IsNullOrWhiteSpace(context.Configuration["WEBSITE_PRIVATE_IP"]))
+        {
+            endpointAddress = IPAddress.Parse(context.Configuration["WEBSITE_PRIVATE_IP"]);
+            var strPorts = context.Configuration["WEBSITE_PRIVATE_PORTS"].Split(',');
+            if (strPorts.Length < 2)
+            {
+                throw new Exception("Insufficient private ports configured.");
+            }
+
+            siloPort = int.Parse(strPorts[0]);
+            gatewayPort = int.Parse(strPorts[1]);
+        }
 
         var azureSqlConnectionString = context.Configuration["AZURE_SQL_CONNECTION_STRING"];
         var connectionString = context.Configuration["AZURE_STORAGE_CONNECTION_STRING"];

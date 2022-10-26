@@ -1,0 +1,8 @@
+# az bicep decompile --file azuredeploy.json
+# Permanent deletion of soft delete enabled Azure Key Vault
+# az keyvault purge --name kv-shopping-app-s1 --location germanywestcentral --no-wait --subscription xxx
+
+az account set --subscription xxx
+az group create --name rg-shopping-app-d1 --location "France Central"
+az deployment group create --resource-group rg-shopping-app-d1 `
+    --template-file azuredeploy.bicep --parameters nameSuffix='d1' sqlAdministratorPassword='Passw@rd1+'

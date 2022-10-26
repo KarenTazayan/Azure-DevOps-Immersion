@@ -132,7 +132,7 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy whole infrastructure deployment file'
       inputs:
-        sourceFolder: '$(Build.SourcesDirectory)/deploy'
+        sourceFolder: '$(Build.SourcesDirectory)/deploy/azure-app-service'
         contents: '*.bicep'
         targetFolder: '$(Build.ArtifactStagingDirectory)/infrastructure/deploy'
         cleanTargetFolder: true
