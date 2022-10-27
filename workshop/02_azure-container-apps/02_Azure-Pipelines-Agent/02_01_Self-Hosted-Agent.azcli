@@ -1,0 +1,12 @@
+# Run a self-hosted agent in Docker: 
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/docker
+
+# Create Azure DevOps Personal Access Tokens. Name: OnDemandBuildAgents
+# For the scope select: Agent Pools (read, manage), Deployment group (read, manage).
+# qgc74oyl4fgjmlsvtqitvehplqbj2xzucbecvoos6wvry5gkeqsa
+
+# PowerShell Syntax
+# docker run -e AZP_URL=https://dev.azure.com/devops-workshop-4 `
+    -e AZP_TOKEN=<PAT token> -e AZP_AGENT_NAME=01_Ubuntu-22.04 `
+    -e AZP_POOL=Default -e AZP_WORK=_work `
+    ubuntu-20.04:latest
