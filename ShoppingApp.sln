@@ -6,10 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{14D8950C-7833-4C96-90E0-7FC66D80900B}"
-	ProjectSection(SolutionItems) = preProject
-		deploy\azuredeploy.bicep = deploy\azuredeploy.bicep
-		deploy\azuredeploy.bicep.azcli = deploy\azuredeploy.bicep.azcli
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8FEF3816-05C8-4E65-A32B-AAD4FDF371EA}"
 EndProject
@@ -19,11 +15,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Grains", "src\S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Tests", "test\ShoppingApp.Tests\ShoppingApp.Tests.csproj", "{B7E0629E-1C20-4A7E-9BD2-498CBE682949}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingApp.WebUI", "src\ShoppingApp.WebUI\ShoppingApp.WebUI.csproj", "{C1708592-2236-4991-9FCF-19B1E59ED88C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.WebUI", "src\ShoppingApp.WebUI\ShoppingApp.WebUI.csproj", "{C1708592-2236-4991-9FCF-19B1E59ED88C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingApp.SiloHost", "src\ShoppingApp.SiloHost\ShoppingApp.SiloHost.csproj", "{EA1DC994-5DCB-43C2-AC1F-8FC82AEC4248}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.SiloHost", "src\ShoppingApp.SiloHost\ShoppingApp.SiloHost.csproj", "{EA1DC994-5DCB-43C2-AC1F-8FC82AEC4248}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingApp.Common", "src\ShoppingApp.Common\ShoppingApp.Common.csproj", "{CC064C5B-F221-4D93-A3A4-D43C56CA31ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingApp.Common", "src\ShoppingApp.Common\ShoppingApp.Common.csproj", "{CC064C5B-F221-4D93-A3A4-D43C56CA31ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azure-app-service", "azure-app-service", "{0E7F1F2B-8559-4565-9C39-16360AADB4CA}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\azure-app-service\azuredeploy.bicep = deploy\azure-app-service\azuredeploy.bicep
+		deploy\azure-app-service\azuredeploy.bicep.azcli = deploy\azure-app-service\azuredeploy.bicep.azcli
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azure-container-apps", "azure-container-apps", "{7AF85291-C3E7-46B2-B8FA-57F5184E1EC8}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\azure-container-apps\azuredeploy.bicep = deploy\azure-container-apps\azuredeploy.bicep
+		deploy\azure-container-apps\azuredeploy.bicep.azcli = deploy\azure-container-apps\azuredeploy.bicep.azcli
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +74,8 @@ Global
 		{C1708592-2236-4991-9FCF-19B1E59ED88C} = {FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}
 		{EA1DC994-5DCB-43C2-AC1F-8FC82AEC4248} = {FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}
 		{CC064C5B-F221-4D93-A3A4-D43C56CA31ED} = {FBF484D5-20C7-4567-BDA2-8B7DE8B3A6F0}
+		{0E7F1F2B-8559-4565-9C39-16360AADB4CA} = {14D8950C-7833-4C96-90E0-7FC66D80900B}
+		{7AF85291-C3E7-46B2-B8FA-57F5184E1EC8} = {14D8950C-7833-4C96-90E0-7FC66D80900B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D37FECF3-AB0B-4EBD-B448-EB1322C57A2F}

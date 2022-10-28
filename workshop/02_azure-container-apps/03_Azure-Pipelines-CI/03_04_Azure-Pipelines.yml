@@ -1,0 +1,106 @@
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+stages:
+- stage: Build
+  displayName: Build stage
+  pool:
+    name: Default
+    demands:
+        - dotnet
+  variables:
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+  jobs:
+    - job: Build_Solution
+      displayName: Whole solution build process
+      steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET 6.0.402 sdk'
+        inputs:
+          packageType: sdk
+          version: 6.0.402
+
+      - task: DotNetCoreCLI@2
+        displayName: 'Build solution ShoppingApp.sln'
+        inputs:
+          command: build
+          projects: 'ShoppingApp.sln'
+          configuration: '$(buildConfiguration)'
+
+      # Run Tests
+      - task: DotNetCoreCLI@2
+        displayName: 'Run Integration Tests'
+        inputs:
+          command: test
+          projects: |
+            test/ShoppingApp.Tests
+            publishTestResults: true
+
+##################### Packing Infrastructure Artifacts Stage #####################
+
+- stage: Packing_Infrastructure_Artifacts
+  displayName: Packing infrastructure artifacts stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: Default
+    demands:
+        - dotnet
+  variables:
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+  jobs:
+  - job: Publish_Infrastructure_Artifacts
+    displayName: Publish infrastructure artifacts
+    steps:
+    - task: CopyFiles@2
+      displayName: 'Copy whole infrastructure deployment file'
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)/deploy/azure-container-apps'
+        contents: '*.bicep'
+        targetFolder: '$(Build.ArtifactStagingDirectory)/infrastructure/deploy'
+        cleanTargetFolder: true
+        
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/artifacts/pipeline-artifacts
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish whole infrastructure deployment file to Pipeline Artifacts'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/infrastructure/deploy'
+        artifactName: 'infrastructure'
+
+##################### Provision Azure Container Registry Stage #####################
+
+- stage: Provision_Azure_Container_Registry
+  displayName: Provision azure container registry stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: Default
+  variables:
+    azureServiceConnection: 'DefaultAzureServiceConnection'
+    resourceGroupName: 'rg-shopping-app'
+    location: 'francecentral'
+    templateFile: '$(Pipeline.Workspace)/infrastructure/azure-container-registry.bicep'
+  jobs:
+  - job: Deploy_Azure_Container_Registry
+    displayName: Deploy azure container registry
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download whole infrastructure deployment files'
+      inputs:
+        artifact: 'infrastructure'
+        path: $(Pipeline.Workspace)/infrastructure
+
+    - task: AzureCLI@2
+      displayName: 'Deploy azure container registry'
+      inputs:
+        azureSubscription: 'DefaultAzureServiceConnection'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az --version
+          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) `
+             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' `
+             appNamePrefix='$(appNamePrefix)'

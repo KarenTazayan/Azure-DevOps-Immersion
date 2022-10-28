@@ -9,52 +9,32 @@ stages:
   pool:
     name: Default
     demands:
-        - msbuild
-        - visualstudio
+        - dotnet
   variables:
     buildPlatform: 'Any CPU'
     buildConfiguration: 'Release'
   jobs:
-  - job: Build_Solution
-    displayName: Whole solution build process
-    steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET 6.0.200 sdk'
-      inputs:
-        packageType: sdk
-        version: 6.0.200
+    - job: Build_Solution
+      displayName: Whole solution build process
+      steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET 6.0.402 sdk'
+        inputs:
+          packageType: sdk
+          version: 6.0.402
 
-    - task: NuGetToolInstaller@1
-      displayName: 'Use NuGet 5.x'
-      inputs:
-        versionSpec: 5.x
+      - task: DotNetCoreCLI@2
+        displayName: 'Build solution ShoppingApp.sln'
+        inputs:
+          command: build
+          projects: 'ShoppingApp.sln'
+          configuration: '$(buildConfiguration)'
 
-    - task: NuGetCommand@2
-      displayName: 'Restore NuGet Packages'
-      inputs:
-        command: 'restore'
-        feedsToUse: 'config'
-        nugetConfigPath: 'nuget.config'
-        restoreSolution: 'ShoppingApp.sln'
-
-    - task: VSBuild@1
-      displayName: 'Build solution **\*.sln'
-      inputs:
-        solution: '**\*.sln'
-        platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
-
-    - task: PowerShell@2
-      displayName: 'Inspect Code with ReSharper CLI'
-      inputs:
-        targetType: filePath
-        filePath: ./InspectCode.ps1
-
-    # Run Tests
-    - task: DotNetCoreCLI@2
-      displayName: 'Run Integration Tests'
-      inputs:
-        command: test
-        projects: |
-          test/ShoppingApp.Tests
-          publishTestResults: true
+      # Run Tests
+      - task: DotNetCoreCLI@2
+        displayName: 'Run Integration Tests'
+        inputs:
+          command: test
+          projects: |
+            test/ShoppingApp.Tests
+            publishTestResults: true
