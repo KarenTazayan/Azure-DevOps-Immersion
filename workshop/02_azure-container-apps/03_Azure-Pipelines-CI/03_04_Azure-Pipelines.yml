@@ -1,4 +1,7 @@
 # https://aka.ms/yaml
+variables:
+  nameSuffix: 'd1'
+  appNamePrefix: 'shoppingapp'
 
 trigger:
 - main
@@ -88,19 +91,54 @@ stages:
     steps:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download whole infrastructure deployment files'
+      name: t1
       inputs:
         artifact: 'infrastructure'
         path: $(Pipeline.Workspace)/infrastructure
 
     - task: AzureCLI@2
       displayName: 'Deploy azure container registry'
+      name: t2
       inputs:
         azureSubscription: 'DefaultAzureServiceConnection'
-        scriptType: 'pscore'
+        scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
-          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) `
-             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' `
-             appNamePrefix='$(appNamePrefix)'
+          ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
+             appNamePrefix='$(appNamePrefix)' --query properties.outputs)
+          # This is a critical security issue. It is for demo purposes only!
+          ACR_URL_TEMP=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
+          ACR_LOGIN_TEMP=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
+          ACR_PASSWORD_TEMP=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
+          echo "Setting ACR_CREDENTIALS for output"
+          echo "##vso[task.setvariable variable=acrUrl;isOutput=true]$ACR_URL_TEMP"
+          echo "##vso[task.setvariable variable=acrLogin;isOutput=true]$ACR_LOGIN_TEMP"
+          echo "##vso[task.setvariable variable=acrPassword;isOutput=true]$ACR_URL_TEMP"
+          echo "ACR credentials is: $ACR_URL_TEMP $ACR_LOGIN_TEMP $ACR_PASSWORD_TEMP"
+          env | sort
+
+##################### Publishing Solution Artifacts Stage #####################
+
+- stage: Publishing_Solution_Artifacts_Stage
+  displayName: Publishing solution artifacts stage
+  dependsOn: Provision_Azure_Container_Registry
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: Default
+  variables:
+    acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
+    acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
+    acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
+  jobs:
+  - job: Deploy_Azure_Container_Registry
+    displayName: Deploy azure container registry
+    steps:
+    - task: Bash@3
+      displayName: 'Print output variables for ACR credentials'
+      inputs:
+        targetType: inline
+        script: |
+          echo "ACR credentials is: $(acrUrl) $(acrLogin) $(acrPassword)"

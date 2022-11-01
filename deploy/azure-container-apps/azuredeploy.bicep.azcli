@@ -4,5 +4,15 @@
 
 az account set --subscription xxx
 az group create --name rg-shopping-app-d1 --location "France Central"
+
+ACR_CREDENTIALS=$(az deployment group create --resource-group rg-shopping-app-d1 \
+    --template-file azure-container-registry.bicep --parameters nameSuffix='d1' \
+    --query properties.outputs)
+
+ACR_URL=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
+ACR_LOGIN=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
+ACR_PASSWORD=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
+echo "ACR credentials is: $ACR_URL $ACR_LOGIN $ACR_PASSWORD"
+
 az deployment group create --resource-group rg-shopping-app-d1 `
     --template-file azuredeploy.bicep --parameters nameSuffix='d1' sqlAdministratorPassword='Passw@rd1+'
