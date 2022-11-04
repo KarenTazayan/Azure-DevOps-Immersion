@@ -6,7 +6,15 @@
 # qgc74oyl4fgjmlsvtqitvehplqbj2xzucbecvoos6wvry5gkeqsa
 
 # PowerShell Syntax
-# docker run -e AZP_URL=https://dev.azure.com/devops-workshop-4 `
-    -e AZP_TOKEN=<PAT token> -e AZP_AGENT_NAME=01_Ubuntu-22.04 `
+# docker run -v /var/run/docker.sock:/var/run/docker.sock `
+    -e AZP_URL=https://dev.azure.com/devops-workshop-4 `
+    -e AZP_TOKEN=<PAT token> -e AZP_AGENT_NAME=01_Ubuntu-20.04 `
     -e AZP_POOL=Default -e AZP_WORK=_work `
     ubuntu-20.04:latest
+
+# PowerShell Syntax
+# docker run run -v /var/run/docker.sock:/var/run/docker.sock `
+    -e AZP_URL=https://dev.azure.com/devops-workshop-4 `
+    -e AZP_TOKEN=<PAT token> -e AZP_AGENT_NAME=01_Debian-10.13 `
+    -e AZP_POOL=Default -e AZP_WORK=_work `
+    debian-10.13:latest

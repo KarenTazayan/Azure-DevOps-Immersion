@@ -110,14 +110,14 @@ stages:
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
              appNamePrefix='$(appNamePrefix)' --query properties.outputs)
           # This is a critical security issue. It is for demo purposes only!
-          ACR_URL_TEMP=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
-          ACR_LOGIN_TEMP=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
-          ACR_PASSWORD_TEMP=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
+          ACR_URL=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
+          ACR_LOGIN=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
+          ACR_PASSWORD=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
           echo "Setting ACR_CREDENTIALS for output"
-          echo "##vso[task.setvariable variable=acrUrl;isOutput=true]$ACR_URL_TEMP"
-          echo "##vso[task.setvariable variable=acrLogin;isOutput=true]$ACR_LOGIN_TEMP"
-          echo "##vso[task.setvariable variable=acrPassword;isOutput=true]$ACR_URL_TEMP"
-          echo "ACR credentials is: $ACR_URL_TEMP $ACR_LOGIN_TEMP $ACR_PASSWORD_TEMP"
+          echo "##vso[task.setvariable variable=acrUrl;isOutput=true]$ACR_URL"
+          echo "##vso[task.setvariable variable=acrLogin;isOutput=true]$ACR_LOGIN"
+          echo "##vso[task.setvariable variable=acrPassword;isOutput=true]$ACR_PASSWORD"
+          echo "ACR credentials is: $ACR_URL $ACR_LOGIN $ACR_PASSWORD"
           env | sort
 
 ##################### Publishing Solution Artifacts Stage #####################
@@ -133,12 +133,26 @@ stages:
     acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
     acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
   jobs:
-  - job: Deploy_Azure_Container_Registry
-    displayName: Deploy azure container registry
+  - job: Push_Containers_Images
+    displayName: Push container images
     steps:
     - task: Bash@3
-      displayName: 'Print output variables for ACR credentials'
+      displayName: 'Push ShoppingApp.SiloHost container image'
       inputs:
         targetType: inline
         script: |
           echo "ACR credentials is: $(acrUrl) $(acrLogin) $(acrPassword)"
+          docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
+          cd "$(Build.SourcesDirectory)"
+          docker build -t "$(acrUrl)/shoppingappsilohost:latest" -f src/ShoppingApp.SiloHost/Dockerfile .
+          docker push "$(acrUrl)/shoppingappsilohost:latest"
+
+    - task: Bash@3
+      displayName: 'Push ShoppingApp.WebUI container image'
+      inputs:
+        targetType: inline
+        script: |
+          docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
+          cd "$(Build.SourcesDirectory)"
+          docker build -t "$(acrUrl)/shoppingappwebui:latest" -f src/ShoppingApp.WebUI/Dockerfile .
+          docker push "$(acrUrl)/shoppingappwebui:latest"
