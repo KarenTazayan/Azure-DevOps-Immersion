@@ -156,21 +156,22 @@ stages:
           docker build -t "$(acrUrl)/shoppingappwebui:latest" -f src/ShoppingApp.WebUI/Dockerfile .
           docker push "$(acrUrl)/shoppingappwebui:latest"
 
-##################### Provision Infrastructure Stage #####################
+##################### Provision Infrastructure Stages #####################
 
-- stage: Provision_Infrastructure
-  displayName: Provision infrastructure stage
+- stage: Provision_Testing_Infrastructure
+  displayName: Provision testing infrastructure stage
+  dependsOn: Publishing_Solution_Artifacts_Stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  pool:
-    name: Default
   variables:
-    azureServiceConnection: 'DefaultAzureServiceConnection'
-    resourceGroupName: 'rg-shopping-app'
-    location: 'francecentral'
-    templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'francecentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
   jobs:
-  - job: Deploy_Infrastructure
-    displayName: Deploy infrastructure in Azure
+  - job: Deploy_Infrastructure_Testing
+    displayName: Deploy testing infrastructure in Azure
+    pool:
+      name: Default
     steps:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download whole infrastructure deployment file'
@@ -190,3 +191,44 @@ stages:
           az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
              appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'
+
+- stage: Provision_Staging_Infrastructure
+  displayName: Provision staging infrastructure stage
+  dependsOn: Publishing_Solution_Artifacts_Stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'francecentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/azuredeploy.bicep'
+  jobs:
+  - deployment: Deploy_Infrastructure_Staging
+    displayName: Deploy staging infrastructure in Azure
+    pool:
+      name: Default
+    variables:
+      # Staging 's1, s2 s3, ...'
+      nameSuffix: 's1'
+    environment: 'Staging'
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download whole infrastructure deployment file'
+            inputs:
+              artifact: 'infrastructure'
+              path: $(Pipeline.Workspace)/infrastructure
+
+          - task: AzureCLI@2
+            displayName: 'Deploy the whole infrastructure to Azure'
+            inputs:
+              azureSubscription: 'DefaultAzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az --version
+                az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+                az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+                  --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
+                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'

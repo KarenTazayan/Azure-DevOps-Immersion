@@ -107,8 +107,7 @@ stages:
           az --version
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
           ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
-             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' --query properties.outputs)
+             --template-file $(templateFile) --parameters appNamePrefix='$(appNamePrefix)' --query properties.outputs)
           # This is a critical security issue. It is for demo purposes only!
           ACR_URL=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
           ACR_LOGIN=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
