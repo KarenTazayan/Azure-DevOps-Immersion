@@ -12,7 +12,7 @@ param sqlAdministratorPassword string
 @minLength(5)
 @maxLength(50)
 @description('Provide a globally unique name of your Azure Container Registry')
-param acrName string = 'acr${appNamePrefix}${nameSuffix}'
+param acrName string = 'acr${appNamePrefix}'
 
 var appiName = 'appi-${appNamePrefix}-${nameSuffix}'
 var keyVaultName = 'kv-${appNamePrefix}-${nameSuffix}'
