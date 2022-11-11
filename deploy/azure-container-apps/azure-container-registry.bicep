@@ -1,10 +1,11 @@
 @description('A unique suffix for names')
+param nameSuffix string = 'd1'
 param appNamePrefix string ='shoppingapp'
 param location string = resourceGroup().location
 
 // Azure Container Registry
 @description('Provide a globally unique name of your Azure Container Registry')
-var acrName = 'acr${appNamePrefix}'
+var acrName = 'acr${appNamePrefix}${nameSuffix}'
 var tags = {
   Purpose: 'Azure Workshop'
 }
