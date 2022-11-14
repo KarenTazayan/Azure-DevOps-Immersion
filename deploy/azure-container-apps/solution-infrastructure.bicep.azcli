@@ -15,4 +15,4 @@ ACR_PASSWORD=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
 echo "ACR credentials is: $ACR_URL $ACR_LOGIN $ACR_PASSWORD"
 
 az deployment group create --resource-group rg-shopping-app-d1 `
-    --template-file azuredeploy.bicep --parameters nameSuffix='d1' sqlAdministratorPassword='Passw@rd1+'
+    --template-file solution-infrastructure.bicep --parameters nameSuffix='d1' sqlAdministratorPassword='Passw@rd1+'
