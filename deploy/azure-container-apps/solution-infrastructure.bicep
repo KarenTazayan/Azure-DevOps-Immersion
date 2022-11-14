@@ -9,10 +9,11 @@ param sqlAdministratorLogin string = 'sq'
 param sqlAdministratorPassword string
 
 // Azure Container Registry
-@minLength(5)
-@maxLength(50)
-@description('Provide a globally unique name of your Azure Container Registry')
-param acrName string = 'acr${appNamePrefix}'
+param acrUrl string
+@secure()
+param acrLogin string
+@secure()
+param acrPassword string
 
 var appiName = 'appi-${appNamePrefix}-${nameSuffix}'
 var keyVaultName = 'kv-${appNamePrefix}-${nameSuffix}'
@@ -26,19 +27,6 @@ var siloHostCtapEnvName = 'ctapenv-${appNamePrefix}-${nameSuffix}'
 var webUiCtapEnvName = 'ctapenv-${appNamePrefix}-ui-${nameSuffix}'
 var tags = {
   Purpose: 'Azure Workshop'
-}
-
-// Azure Container Registry
-resource acr 'Microsoft.ContainerRegistry/registries@2021-09-01' = {
-  name: acrName
-  location: location
-  tags: tags
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    adminUserEnabled: true
-  }
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
@@ -185,13 +173,13 @@ resource siloHostCtap 'Microsoft.App/containerApps@2022-03-01' = {
       secrets: [
         {
           name: 'acr-password'
-          value: acr.listCredentials().passwords[0].value
+          value: acrPassword
         }
       ]
       registries: [
         {
-          server: acr.properties.loginServer
-          username: acr.listCredentials().username
+          server: acrUrl
+          username: acrLogin
           passwordSecretRef: 'acr-password'
         }
       ]
@@ -203,7 +191,7 @@ resource siloHostCtap 'Microsoft.App/containerApps@2022-03-01' = {
     template: {
       containers: [
         {
-          image: '${acr.properties.loginServer}/shoppingappsilohost:latest'
+          image: '${acrUrl}/shoppingappsilohost:latest'
           name: 'silo-host'
           env: [
             {
@@ -239,13 +227,13 @@ resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
       secrets: [
         {
           name: 'acr-password'
-          value: acr.listCredentials().passwords[0].value
+          value: acrPassword
         }
       ]
       registries: [
         {
-          server: acr.properties.loginServer
-          username: acr.listCredentials().username
+          server: acrUrl
+          username: acrLogin
           passwordSecretRef: 'acr-password'
         }
       ]
@@ -257,7 +245,7 @@ resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
     template: {
       containers: [
         {
-          image: '${acr.properties.loginServer}/shoppingappwebui:latest'
+          image: '${acrUrl}/shoppingappwebui:latest'
           name: 'web-ui'
           env: [
             {

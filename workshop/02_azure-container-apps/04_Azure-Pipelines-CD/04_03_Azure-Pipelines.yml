@@ -82,7 +82,7 @@ stages:
     name: Default
   variables:
     azureServiceConnection: 'DefaultAzureServiceConnection'
-    resourceGroupName: 'rg-shopping-app'
+    resourceGroupName: 'rg-shopping-app-main'
     location: 'francecentral'
     templateFile: '$(Pipeline.Workspace)/infrastructure/azure-container-registry.bicep'
   jobs:
@@ -105,13 +105,13 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
-          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
-          ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+          az group create --name $(resourceGroupName) --location $(location)
+          ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName) \
              --template-file $(templateFile) --parameters appNamePrefix='$(appNamePrefix)' --query properties.outputs)
           # This is a critical security issue. It is for demo purposes only!
-          ACR_URL=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
-          ACR_LOGIN=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
-          ACR_PASSWORD=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
+          ACR_URL=$(jq --raw-output '.acrUrl.value' <<< $ACR_CREDENTIALS)
+          ACR_LOGIN=$(jq --raw-output '.acrLogin.value' <<< $ACR_CREDENTIALS)
+          ACR_PASSWORD=$(jq --raw-output '.acrPassword.value' <<< $ACR_CREDENTIALS)
           echo "Setting ACR_CREDENTIALS for output"
           echo "##vso[task.setvariable variable=acrUrl;isOutput=true]$ACR_URL"
           echo "##vso[task.setvariable variable=acrLogin;isOutput=true]$ACR_LOGIN"
@@ -160,13 +160,18 @@ stages:
 
 - stage: Provision_Testing_Infrastructure
   displayName: Provision testing infrastructure stage
-  dependsOn: Publishing_Solution_Artifacts_Stage
+  dependsOn:
+  - Provision_Azure_Container_Registry
+  - Publishing_Solution_Artifacts_Stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   variables:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
       location: 'francecentral'
       templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+      acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
+      acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
+      acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
   jobs:
   - job: Deploy_Infrastructure_Testing
     displayName: Deploy testing infrastructure in Azure
@@ -190,17 +195,23 @@ stages:
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
           az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'
+             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
+             acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
 
 - stage: Provision_Staging_Infrastructure
   displayName: Provision staging infrastructure stage
-  dependsOn: Publishing_Solution_Artifacts_Stage
+  dependsOn:
+  - Provision_Azure_Container_Registry
+  - Publishing_Solution_Artifacts_Stage
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   variables:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
       location: 'francecentral'
       templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+      acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
+      acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
+      acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
   jobs:
   - deployment: Deploy_Infrastructure_Staging
     displayName: Deploy staging infrastructure in Azure
@@ -231,4 +242,5 @@ stages:
                 az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
                 az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
                   --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+'
+                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
+                  acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'

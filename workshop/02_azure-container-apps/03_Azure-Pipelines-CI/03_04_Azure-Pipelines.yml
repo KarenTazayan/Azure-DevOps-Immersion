@@ -82,7 +82,7 @@ stages:
     name: Default
   variables:
     azureServiceConnection: 'DefaultAzureServiceConnection'
-    resourceGroupName: 'rg-shopping-app'
+    resourceGroupName: 'rg-shopping-app-main'
     location: 'francecentral'
     templateFile: '$(Pipeline.Workspace)/infrastructure/azure-container-registry.bicep'
   jobs:
@@ -105,13 +105,13 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az --version
-          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
-          ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+          az group create --name $(resourceGroupName) --location $(location)
+          ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName) \
              --template-file $(templateFile) --parameters appNamePrefix='$(appNamePrefix)' --query properties.outputs)
           # This is a critical security issue. It is for demo purposes only!
-          ACR_URL=$(jq '.acrUrl.value' <<< "$ACR_CREDENTIALS")
-          ACR_LOGIN=$(jq '.acrLogin.value' <<< "$ACR_CREDENTIALS")
-          ACR_PASSWORD=$(jq '.acrPassword.value' <<< "$ACR_CREDENTIALS")
+          ACR_URL=$(jq --raw-output '.acrUrl.value' <<< $ACR_CREDENTIALS)
+          ACR_LOGIN=$(jq --raw-output '.acrLogin.value' <<< $ACR_CREDENTIALS)
+          ACR_PASSWORD=$(jq --raw-output '.acrPassword.value' <<< $ACR_CREDENTIALS)
           echo "Setting ACR_CREDENTIALS for output"
           echo "##vso[task.setvariable variable=acrUrl;isOutput=true]$ACR_URL"
           echo "##vso[task.setvariable variable=acrLogin;isOutput=true]$ACR_LOGIN"
