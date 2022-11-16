@@ -6,13 +6,19 @@
 # qgc74oyl4fgjmlsvtqitvehplqbj2xzucbecvoos6wvry5gkeqsa
 
 # PowerShell Syntax
-# docker run -v /var/run/docker.sock:/var/run/docker.sock `
+# Use Docker within a Docker container
+# Warning!!! Doing this has serious security implications. 
+# The code inside the container can now run as root on your Docker host.
+docker run -v /var/run/docker.sock:/var/run/docker.sock `
     -e AZP_URL=https://dev.azure.com/devops-workshop-4 `
     -e AZP_TOKEN=<PAT token> -e AZP_AGENT_NAME=01_Ubuntu-20.04 `
     -e AZP_POOL=Default -e AZP_WORK=_work --name 01_Ubuntu-20.04 ubuntu-20.04:latest
 
 # PowerShell Syntax
-# docker run run -v /var/run/docker.sock:/var/run/docker.sock `
+# Use Docker within a Docker container
+# Warning!!! Doing this has serious security implications. 
+# The code inside the container can now run as root on your Docker host.
+docker run -v /var/run/docker.sock:/var/run/docker.sock `
     -e AZP_URL=https://dev.azure.com/devops-workshop-4 `
     -e AZP_TOKEN=<PAT token> -e AZP_AGENT_NAME=01_Debian-10.13 `
     -e AZP_POOL=Default -e AZP_WORK=_work --name 01_Debian-10.13 debian-10.13:latest
