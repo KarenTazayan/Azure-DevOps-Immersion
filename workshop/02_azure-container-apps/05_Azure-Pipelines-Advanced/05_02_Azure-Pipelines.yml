@@ -1,0 +1,259 @@
+# https://aka.ms/yaml
+variables:
+  nameSuffix: 'd1'
+  appNamePrefix: 'shoppingapp'
+
+trigger:
+- main
+
+stages:
+- stage: Build
+  displayName: Build stage
+  pool:
+    name: Default
+    demands:
+        - dotnet
+  variables:
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+  jobs:
+    - job: Build_Solution
+      displayName: Whole solution build process
+      steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET 6.0.402 sdk'
+        inputs:
+          packageType: sdk
+          version: 6.0.402
+
+      - task: DotNetCoreCLI@2
+        displayName: 'Build solution ShoppingApp.sln'
+        inputs:
+          command: build
+          projects: 'ShoppingApp.sln'
+          configuration: '$(buildConfiguration)'
+
+      # Run Tests
+      - task: DotNetCoreCLI@2
+        displayName: 'Run Integration Tests'
+        inputs:
+          command: test
+          projects: |
+            test/ShoppingApp.Tests
+            publishTestResults: true
+
+##################### Packing Infrastructure Artifacts Stage #####################
+
+- stage: Packing_Infrastructure_Artifacts
+  displayName: Packing infrastructure artifacts stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: Default
+    demands:
+        - dotnet
+  variables:
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+  jobs:
+  - job: Publish_Infrastructure_Artifacts
+    displayName: Publish infrastructure artifacts
+    steps:
+    - task: CopyFiles@2
+      displayName: 'Copy whole infrastructure deployment file'
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)/deploy/azure-container-apps'
+        contents: '*.bicep'
+        targetFolder: '$(Build.ArtifactStagingDirectory)/infrastructure/deploy'
+        cleanTargetFolder: true
+        
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/artifacts/pipeline-artifacts
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish whole infrastructure deployment file to Pipeline Artifacts'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/infrastructure/deploy'
+        artifactName: 'infrastructure'
+
+##################### Provision Azure Container Registry Stage #####################
+
+- stage: Provision_Azure_Container_Registry
+  displayName: Provision azure container registry stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: Default
+  variables:
+    azureServiceConnection: 'DefaultAzureServiceConnection'
+    resourceGroupName: 'rg-shopping-app-main'
+    location: 'francecentral'
+    templateFile: '$(Pipeline.Workspace)/infrastructure/azure-container-registry.bicep'
+  jobs:
+  - job: Deploy_Azure_Container_Registry
+    displayName: Deploy azure container registry
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download whole infrastructure deployment files'
+      name: t1
+      inputs:
+        artifact: 'infrastructure'
+        path: $(Pipeline.Workspace)/infrastructure
+
+    - task: AzureCLI@2
+      displayName: 'Deploy azure container registry'
+      name: t2
+      inputs:
+        azureSubscription: 'DefaultAzureServiceConnection'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az --version
+          az group create --name $(resourceGroupName) --location $(location)
+          ACR_CREDENTIALS=$(az deployment group create --resource-group $(resourceGroupName) \
+             --template-file $(templateFile) --parameters appNamePrefix='$(appNamePrefix)' --query properties.outputs)
+          # This is a critical security issue. It is for demo purposes only!
+          ACR_URL=$(jq --raw-output '.acrUrl.value' <<< $ACR_CREDENTIALS)
+          ACR_LOGIN=$(jq --raw-output '.acrLogin.value' <<< $ACR_CREDENTIALS)
+          ACR_PASSWORD=$(jq --raw-output '.acrPassword.value' <<< $ACR_CREDENTIALS)
+          echo "Setting ACR_CREDENTIALS for output"
+          echo "##vso[task.setvariable variable=acrUrl;isOutput=true]$ACR_URL"
+          echo "##vso[task.setvariable variable=acrLogin;isOutput=true]$ACR_LOGIN"
+          echo "##vso[task.setvariable variable=acrPassword;isOutput=true]$ACR_PASSWORD"
+          echo "ACR credentials is: $ACR_URL $ACR_LOGIN $ACR_PASSWORD"
+          env | sort
+
+##################### Publishing Solution Artifacts Stage #####################
+
+- stage: Publishing_Solution_Artifacts_Stage
+  displayName: Publishing solution artifacts stage
+  dependsOn: Provision_Azure_Container_Registry
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: Default
+  variables:
+    acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
+    acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
+    acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
+  jobs:
+  - job: Push_Containers_Images
+    displayName: Push container images
+    steps:
+    # Version with GitVersion
+    - task: gitversion/setup@0
+      displayName: Install GitVersion
+      inputs:
+        versionSpec: '5.x'
+
+    - task: gitversion/execute@0
+      displayName: Execute GitVersion
+
+    # Print SemVer Number
+    - script: echo $(GitVersion.SemVer)
+      displayName: 'Print SemVer Number'
+
+    - task: Bash@3
+      displayName: 'Push ShoppingApp.SiloHost container image'
+      inputs:
+        targetType: inline
+        script: |
+          echo "ACR credentials is: $(acrUrl) $(acrLogin) $(acrPassword)"
+          docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
+          cd "$(Build.SourcesDirectory)"
+          docker build -t "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)" -f src/ShoppingApp.SiloHost/Dockerfile .
+          docker push "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)"
+
+    - task: Bash@3
+      displayName: 'Push ShoppingApp.WebUI container image'
+      inputs:
+        targetType: inline
+        script: |
+          docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
+          cd "$(Build.SourcesDirectory)"
+          docker build -t "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)" -f src/ShoppingApp.WebUI/Dockerfile .
+          docker push "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)"
+
+##################### Provision Infrastructure Stages #####################
+
+- stage: Provision_Testing_Infrastructure
+  displayName: Provision testing infrastructure stage
+  dependsOn:
+  - Provision_Azure_Container_Registry
+  - Publishing_Solution_Artifacts_Stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'francecentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+      acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
+      acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
+      acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
+  jobs:
+  - job: Deploy_Infrastructure_Testing
+    displayName: Deploy testing infrastructure in Azure
+    pool:
+      name: Default
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download whole infrastructure deployment file'
+      inputs:
+        artifact: 'infrastructure'
+        path: $(Pipeline.Workspace)/infrastructure
+
+    - task: AzureCLI@2
+      displayName: 'Deploy the whole infrastructure to Azure'
+      inputs:
+        azureSubscription: 'DefaultAzureServiceConnection'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az --version
+          az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+          az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+             --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
+             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
+             acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
+
+- stage: Provision_Staging_Infrastructure
+  displayName: Provision staging infrastructure stage
+  dependsOn:
+  - Provision_Azure_Container_Registry
+  - Publishing_Solution_Artifacts_Stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+      azureServiceConnection: 'DefaultAzureServiceConnection'
+      resourceGroupName: 'rg-shopping-app'
+      location: 'francecentral'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+      acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
+      acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
+      acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
+  jobs:
+  - deployment: Deploy_Infrastructure_Staging
+    displayName: Deploy staging infrastructure in Azure
+    pool:
+      name: Default
+    variables:
+      # Staging 's1, s2 s3, ...'
+      nameSuffix: 's1'
+    environment: 'Staging'
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download whole infrastructure deployment file'
+            inputs:
+              artifact: 'infrastructure'
+              path: $(Pipeline.Workspace)/infrastructure
+
+          - task: AzureCLI@2
+            displayName: 'Deploy the whole infrastructure to Azure'
+            inputs:
+              azureSubscription: 'DefaultAzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az --version
+                az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
+                az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
+                  --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
+                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
+                  acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
