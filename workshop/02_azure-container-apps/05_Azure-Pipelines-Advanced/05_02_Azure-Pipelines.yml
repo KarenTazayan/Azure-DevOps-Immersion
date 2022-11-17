@@ -273,5 +273,5 @@ stages:
                 az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
                 az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
                   --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-                  appNamePrefix='$(appNamePrefix)' semVer='$(GitVersion.SemVer)'' sqlAdministratorPassword='Passw@rd1+' \
+                  appNamePrefix='$(appNamePrefix)' semVer='$(GitVersion.SemVer)' sqlAdministratorPassword='Passw@rd1+' \
                   acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
