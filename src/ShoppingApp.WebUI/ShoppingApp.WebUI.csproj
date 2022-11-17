@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShoppingApp.Abstractions\ShoppingApp.Abstractions.csproj" />
+    <ProjectReference Include="..\ShoppingApp.Common\ShoppingApp.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

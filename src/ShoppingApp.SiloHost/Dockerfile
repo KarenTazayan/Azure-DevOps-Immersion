@@ -6,6 +6,9 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+
+ARG assemblyInformationalVersion=1.0.0
+
 WORKDIR /src
 COPY ["nuget.config", "."]
 COPY ["src/ShoppingApp.SiloHost/ShoppingApp.SiloHost.csproj", "src/ShoppingApp.SiloHost/"]
@@ -17,7 +20,7 @@ WORKDIR "/src/src/ShoppingApp.SiloHost"
 RUN dotnet build "ShoppingApp.SiloHost.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ShoppingApp.SiloHost.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ShoppingApp.SiloHost.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:AssemblyInformationalVersion=$assemblyInformationalVersion
 
 FROM base AS final
 WORKDIR /app

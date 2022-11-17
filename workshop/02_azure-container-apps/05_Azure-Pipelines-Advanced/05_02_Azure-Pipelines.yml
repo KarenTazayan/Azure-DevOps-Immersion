@@ -156,7 +156,8 @@ stages:
           echo "ACR credentials is: $(acrUrl) $(acrLogin) $(acrPassword)"
           docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
           cd "$(Build.SourcesDirectory)"
-          docker build -t "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)" -f src/ShoppingApp.SiloHost/Dockerfile .
+          docker build -t "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)" -f src/ShoppingApp.SiloHost/Dockerfile . \
+            --build-arg assemblyInformationalVersion=$(GitVersion.InformationalVersion)
           docker push "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)"
 
     - task: Bash@3
@@ -166,7 +167,8 @@ stages:
         script: |
           docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
           cd "$(Build.SourcesDirectory)"
-          docker build -t "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)" -f src/ShoppingApp.WebUI/Dockerfile .
+          docker build -t "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)" -f src/ShoppingApp.WebUI/Dockerfile . \
+            --build-arg assemblyInformationalVersion=$(GitVersion.InformationalVersion)
           docker push "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)"
 
 ##################### Provision Infrastructure Stages #####################

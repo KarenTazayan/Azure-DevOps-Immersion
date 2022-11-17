@@ -31,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShoppingApp.Common\ShoppingApp.Common.csproj" />
     <ProjectReference Include="..\ShoppingApp.Grains\ShoppingApp.Grains.csproj" />
   </ItemGroup>
 
