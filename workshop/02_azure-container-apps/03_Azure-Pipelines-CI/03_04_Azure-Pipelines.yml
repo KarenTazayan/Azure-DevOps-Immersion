@@ -143,8 +143,8 @@ stages:
           echo "ACR credentials is: $(acrUrl) $(acrLogin) $(acrPassword)"
           docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
           cd "$(Build.SourcesDirectory)"
-          docker build -t "$(acrUrl)/shoppingappsilohost:latest" -f src/ShoppingApp.SiloHost/Dockerfile .
-          docker push "$(acrUrl)/shoppingappsilohost:latest"
+          docker build -t "$(acrUrl)/shoppingapp/silohost:latest" -f src/ShoppingApp.SiloHost/Dockerfile .
+          docker push "$(acrUrl)/shoppingapp/silohost:latest"
 
     - task: Bash@3
       displayName: 'Push ShoppingApp.WebUI container image'
@@ -153,5 +153,5 @@ stages:
         script: |
           docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
           cd "$(Build.SourcesDirectory)"
-          docker build -t "$(acrUrl)/shoppingappwebui:latest" -f src/ShoppingApp.WebUI/Dockerfile .
-          docker push "$(acrUrl)/shoppingappwebui:latest"
+          docker build -t "$(acrUrl)/shoppingapp/webui:latest" -f src/ShoppingApp.WebUI/Dockerfile .
+          docker push "$(acrUrl)/shoppingapp/webui:latest"

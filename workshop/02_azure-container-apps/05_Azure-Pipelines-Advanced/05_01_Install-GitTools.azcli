@@ -1,2 +1,5 @@
 # Install GitTools for the current Azure DevOps Organization
 # https://marketplace.visualstudio.com/items?itemName=gittools.gittools
+
+# Disable shallow fetch the Azure Pipeline. It's required for GitTools.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/steps-checkout?view=azure-pipelines#shallow-fetch

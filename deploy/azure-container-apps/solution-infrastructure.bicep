@@ -1,6 +1,7 @@
 @description('A unique suffix for names')
 param nameSuffix string = 'd1'
 param appNamePrefix string ='shoppingapp'
+param semVer string = 'latest'
 param location string = resourceGroup().location
 
 // Azure SQL
@@ -15,6 +16,7 @@ param acrLogin string
 @secure()
 param acrPassword string
 
+var revisionSuffix = 'v${replace(semVer, '.', '-')}'
 var appiName = 'appi-${appNamePrefix}-${nameSuffix}'
 var keyVaultName = 'kv-${appNamePrefix}-${nameSuffix}'
 var logName = 'log-${appNamePrefix}-${nameSuffix}'
@@ -189,9 +191,10 @@ resource siloHostCtap 'Microsoft.App/containerApps@2022-03-01' = {
       }
     }
     template: {
+      revisionSuffix: revisionSuffix
       containers: [
         {
-          image: '${acrUrl}/shoppingappsilohost:latest'
+          image: '${acrUrl}/shoppingapp/silohost:${semVer}'
           name: 'silo-host'
           env: [
             {
@@ -243,9 +246,10 @@ resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
       }
     }
     template: {
+      revisionSuffix: revisionSuffix
       containers: [
         {
-          image: '${acrUrl}/shoppingappwebui:latest'
+          image: '${acrUrl}/shoppingapp/webui:${semVer}'
           name: 'web-ui'
           env: [
             {

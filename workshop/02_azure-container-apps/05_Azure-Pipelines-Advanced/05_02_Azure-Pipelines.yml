@@ -197,6 +197,15 @@ stages:
         artifact: 'infrastructure'
         path: $(Pipeline.Workspace)/infrastructure
 
+    # Version with GitVersion
+    - task: gitversion/setup@0
+      displayName: Install GitVersion
+      inputs:
+        versionSpec: '5.x'
+
+    - task: gitversion/execute@0
+      displayName: Execute GitVersion
+
     - task: AzureCLI@2
       displayName: 'Deploy the whole infrastructure to Azure'
       inputs:
@@ -208,7 +217,7 @@ stages:
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
           az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
+             appNamePrefix='$(appNamePrefix)' semVer='$(GitVersion.SemVer)' sqlAdministratorPassword='Passw@rd1+' \
              acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
 
 - stage: Provision_Staging_Infrastructure
@@ -243,6 +252,15 @@ stages:
             inputs:
               artifact: 'infrastructure'
               path: $(Pipeline.Workspace)/infrastructure
+          
+          # Version with GitVersion
+          - task: gitversion/setup@0
+            displayName: Install GitVersion
+            inputs:
+              versionSpec: '5.x'
+
+          - task: gitversion/execute@0
+            displayName: Execute GitVersion
 
           - task: AzureCLI@2
             displayName: 'Deploy the whole infrastructure to Azure'
@@ -255,5 +273,5 @@ stages:
                 az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
                 az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
                   --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
+                  appNamePrefix='$(appNamePrefix)' semVer='$(GitVersion.SemVer)'' sqlAdministratorPassword='Passw@rd1+' \
                   acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
