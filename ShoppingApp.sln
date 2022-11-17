@@ -29,8 +29,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azure-app-service", "azure-
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azure-container-apps", "azure-container-apps", "{7AF85291-C3E7-46B2-B8FA-57F5184E1EC8}"
 	ProjectSection(SolutionItems) = preProject
-		deploy\azure-container-apps\azuredeploy.bicep = deploy\azure-container-apps\azuredeploy.bicep
-		deploy\azure-container-apps\azuredeploy.bicep.azcli = deploy\azure-container-apps\azuredeploy.bicep.azcli
+		deploy\azure-container-apps\azure-container-registry.bicep = deploy\azure-container-apps\azure-container-registry.bicep
+		deploy\azure-container-apps\solution-infrastructure.bicep = deploy\azure-container-apps\solution-infrastructure.bicep
+		deploy\azure-container-apps\solution-infrastructure.bicep.azcli = deploy\azure-container-apps\solution-infrastructure.bicep.azcli
 	EndProjectSection
 EndProject
 Global
