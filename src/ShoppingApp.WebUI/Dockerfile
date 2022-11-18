@@ -11,7 +11,7 @@ ARG assemblyInformationalVersion=1.0.0
 
 WORKDIR /work
 COPY ["src", "."]
-RUN dotnet restore "src/ShoppingApp.WebUI/ShoppingApp.WebUI.csproj"
+RUN dotnet restore "ShoppingApp.WebUI/ShoppingApp.WebUI.csproj"
 WORKDIR "/work/ShoppingApp.WebUI"
 RUN dotnet build "ShoppingApp.WebUI.csproj" -c Release -o /app/build
 
