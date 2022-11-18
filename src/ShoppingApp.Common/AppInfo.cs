@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 
+namespace ShoppingApp.Common;
+
 public static class AppInfo
 {
     public static string RetrieveInformationalVersion(Assembly assembly)

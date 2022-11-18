@@ -9,17 +9,14 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 ARG assemblyInformationalVersion=1.0.0
 
-WORKDIR /src
-COPY ["nuget.config", "."]
-COPY ["src/ShoppingApp.WebUI/ShoppingApp.WebUI.csproj", "src/ShoppingApp.WebUI/"]
-COPY ["src/ShoppingApp.Abstractions/ShoppingApp.Abstractions.csproj", "src/ShoppingApp.Abstractions/"]
+WORKDIR /work
+COPY ["src", "."]
 RUN dotnet restore "src/ShoppingApp.WebUI/ShoppingApp.WebUI.csproj"
-COPY . .
-WORKDIR "/src/src/ShoppingApp.WebUI"
+WORKDIR "/work/ShoppingApp.WebUI"
 RUN dotnet build "ShoppingApp.WebUI.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ShoppingApp.WebUI.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:AssemblyInformationalVersion=$assemblyInformationalVersion
+RUN dotnet publish "ShoppingApp.WebUI.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:InformationalVersion=$assemblyInformationalVersion
 
 FROM base AS final
 WORKDIR /app

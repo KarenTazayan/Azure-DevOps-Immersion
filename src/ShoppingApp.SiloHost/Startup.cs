@@ -1,5 +1,6 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using System.Reflection;
+using ShoppingApp.Common;
 
 namespace ShoppingApp.SiloHost;
 

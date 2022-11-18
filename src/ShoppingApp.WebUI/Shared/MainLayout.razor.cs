@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using ShoppingApp.Common;
 using ShoppingApp.WebUI.Services;
 using MudSeverity = MudBlazor.Severity;
 
@@ -8,7 +10,16 @@ namespace ShoppingApp.WebUI.Shared;
 public partial class MainLayout
 {
     const string PrefersDarkThemeKey = "prefers-dark-scheme";
-    
+
+    public string AppVersion
+    {
+        get
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            return AppInfo.RetrieveInformationalVersion(assembly);
+        }
+    }
+
     readonly MudTheme _theme = new()
     {
         Palette = new Palette()
