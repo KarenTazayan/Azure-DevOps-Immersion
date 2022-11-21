@@ -18,6 +18,7 @@ param acrPassword string
 
 var revisionSuffix = 'v${replace(semVer, '.', '-')}'
 var appiName = 'appi-${appNamePrefix}-${nameSuffix}'
+var sigrName='sigr-${appNamePrefix}-${nameSuffix}'
 var keyVaultName = 'kv-${appNamePrefix}-${nameSuffix}'
 var logName = 'log-${appNamePrefix}-${nameSuffix}'
 var storageName = 'st${appNamePrefix}${nameSuffix}'
@@ -104,6 +105,24 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         properties: {
           addressPrefix: '10.0.2.0/23'
         }
+      }
+    ]
+  }
+}
+
+resource signalR 'Microsoft.SignalRService/signalR@2022-02-01' = {
+  name: sigrName
+  location: location
+  sku: {
+    capacity: 1
+    name: 'Free_F1'
+  }
+  kind: 'SignalR'
+  properties: {
+    features: [
+      {
+        flag: 'ServiceMode'
+        value: 'Default'
       }
     ]
   }
@@ -255,6 +274,10 @@ resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
             {
               name: 'AZURE_STORAGE_CONNECTION_STRING'
               value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${listKeys(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', storageName), '2019-04-01').keys[0].value};EndpointSuffix=core.windows.net'
+            }
+            {
+                name: 'AZURE_SIGNALR_CONNECTION_STRING'
+                value: signalR.listKeys().primaryConnectionString
             }
             {
               name: 'APPINSIGHTS_CONNECTION_STRING'

@@ -6,6 +6,14 @@ using ShoppingApp.WebUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSignalR().AddAzureSignalR(options =>
+    {
+        options.ConnectionString = GlobalConfig.AzureSignalRConnection;
+    });
+}
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
