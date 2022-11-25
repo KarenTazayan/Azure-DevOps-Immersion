@@ -1,6 +1,7 @@
 # https://aka.ms/yaml
 variables:
-  nameSuffix: 'd1'
+  # d - development b - basic => db
+  nameSuffix: 'db1'
   appNamePrefix: 'shoppingapp'
 
 trigger:
@@ -170,7 +171,7 @@ stages:
     azureServiceConnection: 'DefaultAzureServiceConnection'
     resourceGroupName: 'rg-shopping-app'
     location: 'francecentral'
-    templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+    templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure-basic.bicep'
     acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
     acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
     acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
@@ -188,6 +189,7 @@ stages:
       displayName: 'Deploy the whole infrastructure to Azure'
       inputs:
         azureSubscription: 'DefaultAzureServiceConnection'
+        addSpnToEnvironment: true
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |

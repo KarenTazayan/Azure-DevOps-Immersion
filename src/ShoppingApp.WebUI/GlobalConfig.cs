@@ -8,6 +8,14 @@ public static class GlobalConfig
 
     public static string AzureSignalRConnection => Resolver.AzureSignalRConnectionString;
 
+    public static string AzureBlobStorageFobWebUiUri =>
+        Environment.GetEnvironmentVariable(EnvironmentVariables.AzureBlobStorageFobWebUiUri) ??
+        string.Empty;
+
+    public static string AzureKeyVaultFobWebUiUri =>
+        Environment.GetEnvironmentVariable(EnvironmentVariables.AzureKeyVaultFobWebUiUri) ??
+        string.Empty;
+
     private static class Resolver
     {
         public static string AzureStorageConnectionString =>
@@ -17,7 +25,6 @@ public static class GlobalConfig
         public static string AzureSignalRConnectionString =>
             Environment.GetEnvironmentVariable(EnvironmentVariables.SignalRConnectionString) ??
             string.Empty;
-
 
         public static string InstrKey =>
             Environment.GetEnvironmentVariable(EnvironmentVariables.InstrumentationKey) ??

@@ -2,17 +2,28 @@ using Microsoft.ApplicationInsights.Extensibility;
 using MudBlazor.Services;
 using ShoppingApp.WebUI;
 using ShoppingApp.WebUI.Cluster;
+using ShoppingApp.WebUI.Extensions;
 using ShoppingApp.WebUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (!builder.Environment.IsDevelopment())
+// Workshop case: 05_Azure-Pipelines-CD-Advanced
+
+// Scalability on Azure Container Apps for Blazor based WebUI.
+/*if (!builder.Environment.IsDevelopment())
 {
+    var azureBlobStorageFobWebUiUri = GlobalConfig.AzureBlobStorageFobWebUiUri;
+    var azureKeyVaultFobWebUiUri = GlobalConfig.AzureKeyVaultFobWebUiUri;
+
+    builder.UseCentralizedKeys(azureBlobStorageFobWebUiUri, azureKeyVaultFobWebUiUri);
+
     builder.Services.AddSignalR().AddAzureSignalR(options =>
     {
         options.ConnectionString = GlobalConfig.AzureSignalRConnection;
+        options.ServerStickyMode =
+            Microsoft.Azure.SignalR.ServerStickyMode.Required;
     });
-}
+}*/
 
 // Add services to the container.
 builder.Services.AddRazorPages();

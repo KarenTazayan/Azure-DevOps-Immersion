@@ -1,6 +1,7 @@
 # https://aka.ms/yaml
 variables:
-  nameSuffix: 'd1'
+  # d - development a - advanced => da
+  nameSuffix: 'da1'
   appNamePrefix: 'shoppingapp'
 
 trigger:
@@ -135,6 +136,19 @@ stages:
   - job: Push_Containers_Images
     displayName: Push container images
     steps:
+    # Version with GitVersion
+    - task: gitversion/setup@0
+      displayName: Install GitVersion
+      inputs:
+        versionSpec: '5.x'
+
+    - task: gitversion/execute@0
+      displayName: Execute GitVersion
+
+    # Print SemVer Number
+    - script: echo $(GitVersion.SemVer)
+      displayName: 'Print SemVer Number'
+
     - task: Bash@3
       displayName: 'Push ShoppingApp.SiloHost container image'
       inputs:
@@ -143,8 +157,9 @@ stages:
           echo "ACR credentials is: $(acrUrl) $(acrLogin) $(acrPassword)"
           docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
           cd "$(Build.SourcesDirectory)"
-          docker build -t "$(acrUrl)/shoppingapp/silohost:latest" -f src/ShoppingApp.SiloHost/Dockerfile .
-          docker push "$(acrUrl)/shoppingapp/silohost:latest"
+          docker build -t "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)" -f src/ShoppingApp.SiloHost/Dockerfile . \
+            --build-arg assemblyInformationalVersion=$(GitVersion.InformationalVersion)
+          docker push "$(acrUrl)/shoppingapp/silohost:$(GitVersion.SemVer)"
 
     - task: Bash@3
       displayName: 'Push ShoppingApp.WebUI container image'
@@ -153,8 +168,9 @@ stages:
         script: |
           docker login $(acrUrl) -u $(acrLogin) -p $(acrPassword)
           cd "$(Build.SourcesDirectory)"
-          docker build -t "$(acrUrl)/shoppingapp/webui:latest" -f src/ShoppingApp.WebUI/Dockerfile .
-          docker push "$(acrUrl)/shoppingapp/webui:latest"
+          docker build -t "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)" -f src/ShoppingApp.WebUI/Dockerfile . \
+            --build-arg assemblyInformationalVersion=$(GitVersion.InformationalVersion)
+          docker push "$(acrUrl)/shoppingapp/webui:$(GitVersion.SemVer)"
 
 ##################### Provision Infrastructure Stages #####################
 
@@ -168,7 +184,7 @@ stages:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
       location: 'francecentral'
-      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure-advanced.bicep'
       acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
       acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
       acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
@@ -184,19 +200,31 @@ stages:
         artifact: 'infrastructure'
         path: $(Pipeline.Workspace)/infrastructure
 
+    # Version with GitVersion
+    - task: gitversion/setup@0
+      displayName: Install GitVersion
+      inputs:
+        versionSpec: '5.x'
+
+    - task: gitversion/execute@0
+      displayName: Execute GitVersion
+
     - task: AzureCLI@2
       displayName: 'Deploy the whole infrastructure to Azure'
       inputs:
         azureSubscription: 'DefaultAzureServiceConnection'
+        addSpnToEnvironment: true
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
+          env | sort
           az --version
           az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
           az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
              --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-             appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
-             acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
+             appNamePrefix='$(appNamePrefix)' semVer='$(GitVersion.SemVer)' sqlAdministratorPassword='Passw@rd1+' \
+             acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)' \
+             executorSecurityPrincipal=${servicePrincipalId}
 
 - stage: Provision_Staging_Infrastructure
   displayName: Provision staging infrastructure stage
@@ -208,7 +236,7 @@ stages:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
       location: 'francecentral'
-      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure.bicep'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure-advanced.bicep'
       acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
       acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
       acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
@@ -230,11 +258,21 @@ stages:
             inputs:
               artifact: 'infrastructure'
               path: $(Pipeline.Workspace)/infrastructure
+          
+          # Version with GitVersion
+          - task: gitversion/setup@0
+            displayName: Install GitVersion
+            inputs:
+              versionSpec: '5.x'
+
+          - task: gitversion/execute@0
+            displayName: Execute GitVersion
 
           - task: AzureCLI@2
             displayName: 'Deploy the whole infrastructure to Azure'
             inputs:
               azureSubscription: 'DefaultAzureServiceConnection'
+              addSpnToEnvironment: true
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
@@ -242,5 +280,6 @@ stages:
                 az group create --name $(resourceGroupName)-$(nameSuffix) --location $(location)
                 az deployment group create --resource-group $(resourceGroupName)-$(nameSuffix) \
                   --template-file $(templateFile) --parameters nameSuffix='$(nameSuffix)' \
-                  appNamePrefix='$(appNamePrefix)' sqlAdministratorPassword='Passw@rd1+' \
-                  acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)'
+                  appNamePrefix='$(appNamePrefix)' semVer='$(GitVersion.SemVer)' sqlAdministratorPassword='Passw@rd1+' \
+                  acrUrl='$(acrUrl)' acrLogin='$(acrLogin)' acrPassword='$(acrPassword)' \
+                  executorSecurityPrincipal=${servicePrincipalId}

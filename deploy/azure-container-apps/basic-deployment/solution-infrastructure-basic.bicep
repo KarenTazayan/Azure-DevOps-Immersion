@@ -1,5 +1,6 @@
-@description('A unique suffix for names')
-param nameSuffix string = 'd1'
+@description('A suffix for resource names uniqueness.')
+// d - development b - basic => db
+param nameSuffix string = 'db1'
 param appNamePrefix string ='shoppingapp'
 param semVer string = 'latest'
 param location string = resourceGroup().location
@@ -16,38 +17,27 @@ param acrLogin string
 @secure()
 param acrPassword string
 
+// General
+var vnetName = 'vnet-${appNamePrefix}-${nameSuffix}'
 var revisionSuffix = 'v${replace(semVer, '.', '-')}'
 var appiName = 'appi-${appNamePrefix}-${nameSuffix}'
-var sigrName='sigr-${appNamePrefix}-${nameSuffix}'
-var keyVaultName = 'kv-${appNamePrefix}-${nameSuffix}'
 var logName = 'log-${appNamePrefix}-${nameSuffix}'
+
+// Microsoft Orleans Hosting
 var storageName = 'st${appNamePrefix}${nameSuffix}'
-var vnetName = 'vnet-${appNamePrefix}-${nameSuffix}'
 var sqlName = 'sql-${appNamePrefix}-${nameSuffix}'
 var siloHostCtapName = 'ctap-${appNamePrefix}-${nameSuffix}'
-var webUiCtapName = 'ctap-${appNamePrefix}-ui-${nameSuffix}'
 var siloHostCtapEnvName = 'ctapenv-${appNamePrefix}-${nameSuffix}'
+
+// Web UI Hosting
+var webUiCtapName = 'ctap-${appNamePrefix}-ui-${nameSuffix}'
 var webUiCtapEnvName = 'ctapenv-${appNamePrefix}-ui-${nameSuffix}'
+
 var tags = {
   Purpose: 'Azure Workshop'
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
-  name: keyVaultName
-  location: location
-  tags: tags
-  properties: {
-    accessPolicies: [
-    ]
-    tenantId: subscription().tenantId
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-  }
-}
-
-resource storage 'Microsoft.Storage/storageAccounts@2019-06-01' = {
+resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: storageName
   location: location
   tags: tags
@@ -105,24 +95,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         properties: {
           addressPrefix: '10.0.2.0/23'
         }
-      }
-    ]
-  }
-}
-
-resource signalR 'Microsoft.SignalRService/signalR@2022-02-01' = {
-  name: sigrName
-  location: location
-  sku: {
-    capacity: 1
-    name: 'Free_F1'
-  }
-  kind: 'SignalR'
-  properties: {
-    features: [
-      {
-        flag: 'ServiceMode'
-        value: 'Default'
       }
     ]
   }
@@ -242,6 +214,9 @@ resource siloHostCtap 'Microsoft.App/containerApps@2022-03-01' = {
 resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
   name: webUiCtapName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     managedEnvironmentId: webUiCtapEnv.id
     configuration: {
@@ -276,10 +251,6 @@ resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
               value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${listKeys(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', storageName), '2019-04-01').keys[0].value};EndpointSuffix=core.windows.net'
             }
             {
-                name: 'AZURE_SIGNALR_CONNECTION_STRING'
-                value: signalR.listKeys().primaryConnectionString
-            }
-            {
               name: 'APPINSIGHTS_CONNECTION_STRING'
               value: reference(appi.id, '2020-02-02').ConnectionString
             }
@@ -294,4 +265,4 @@ resource webUiCtap 'Microsoft.App/containerApps@2022-03-01' = {
   }
 }
 
-output fullReferenceOutput object = keyVault.properties
+output fullReferenceOutput object = siloHostCtap.properties
