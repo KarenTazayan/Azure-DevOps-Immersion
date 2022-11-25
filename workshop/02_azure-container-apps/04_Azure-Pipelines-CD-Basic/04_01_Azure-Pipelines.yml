@@ -63,7 +63,7 @@ stages:
       displayName: 'Copy whole infrastructure deployment file'
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)/deploy/azure-container-apps'
-        contents: '*.bicep'
+        contents: '**/*.bicep'
         targetFolder: '$(Build.ArtifactStagingDirectory)/infrastructure/deploy'
         cleanTargetFolder: true
         
@@ -171,7 +171,7 @@ stages:
     azureServiceConnection: 'DefaultAzureServiceConnection'
     resourceGroupName: 'rg-shopping-app'
     location: 'francecentral'
-    templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure-basic.bicep'
+    templateFile: '$(Pipeline.Workspace)/infrastructure/basic-deployment/solution-infrastructure-basic.bicep'
     acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
     acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
     acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
