@@ -184,7 +184,7 @@ stages:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
       location: 'francecentral'
-      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure-advanced.bicep'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/advanced-deployment/solution-infrastructure-advanced.bicep'
       acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
       acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
       acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
@@ -236,7 +236,7 @@ stages:
       azureServiceConnection: 'DefaultAzureServiceConnection'
       resourceGroupName: 'rg-shopping-app'
       location: 'francecentral'
-      templateFile: '$(Pipeline.Workspace)/infrastructure/solution-infrastructure-advanced.bicep'
+      templateFile: '$(Pipeline.Workspace)/infrastructure/advanced-deployment/solution-infrastructure-advanced.bicep'
       acrUrl: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrUrl'] ]
       acrLogin: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrLogin'] ]
       acrPassword: $[ stageDependencies.Provision_Azure_Container_Registry.Deploy_Azure_Container_Registry.outputs['t2.acrPassword'] ]
